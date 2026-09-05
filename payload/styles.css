@@ -1,0 +1,20 @@
+/* Import a modern Persian font from Google Fonts (Vazirmatn) */
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap');
+
+/* Apply font to patched elements */
+[data-agy-rtl="true"] {
+  font-family: 'Vazirmatn', system-ui, -apple-system, sans-serif !important;
+  line-height: 1.8 !important;
+  letter-spacing: normal !important;
+}
+
+/* Fix code blocks inside RTL text */
+[data-agy-rtl="true"] code, 
+[data-agy-rtl="true"] pre {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate !important;
+  font-family: monospace !important;
+  display: inline-block;
+  margin: 0 4px;
+}

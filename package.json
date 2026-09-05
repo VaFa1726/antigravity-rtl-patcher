@@ -1,0 +1,32 @@
+{
+  "name": "antigravity-rtl-patcher",
+  "version": "1.0.0",
+  "description": "An elegant RTL and typography patcher for Antigravity IDE based on Electron",
+  "main": "src/patcher.js",
+  "bin": {
+    "agy-rtl": "./bin/cli.js"
+  },
+  "scripts": {
+    "start": "node ./bin/cli.js"
+  },
+  "keywords": [
+    "antigravity",
+    "rtl",
+    "farsi",
+    "arabic",
+    "hebrew",
+    "patcher",
+    "electron",
+    "asar"
+  ],
+  "author": "VaFa1726",
+  "license": "MIT",
+  "dependencies": {
+    "@electron/asar": "^3.2.14",
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "fs-extra": "^11.2.0",
+    "ora": "^5.4.1",
+    "sudo-prompt": "^9.2.1"
+  }
+}
