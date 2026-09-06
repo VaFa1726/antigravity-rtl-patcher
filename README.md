@@ -1,126 +1,80 @@
-# 🌌 Antigravity RTL Patcher
+# Antigravity RTL Patcher
 
-<div align="center">
+Smart RTL and Persian/Arabic typography support for the [Antigravity](https://antigravity.dev) desktop app. Patches the Electron runtime to detect right-to-left text and apply proper styling automatically.
 
-![Version](https://img.shields.io/npm/v/antigravity-rtl-patcher?color=%2300bcd4&style=for-the-badge&label=VERSION)
-![Downloads](https://img.shields.io/npm/dt/antigravity-rtl-patcher?color=%23e040fb&style=for-the-badge)
-![License](https://img.shields.io/badge/LICENSE-MIT-brightgreen?style=for-the-badge)
-![Node](https://img.shields.io/badge/NODE-%3E%3D16-339933?style=for-the-badge&logo=node.js&logoColor=white)
-
-**Intelligent RTL & Persian Typography Engine for Antigravity**
-
-*One command. Full right-to-left support. Toggle on/off anytime.*
-
-</div>
+[![npm version](https://img.shields.io/npm/v/antigravity-rtl-patcher)](https://www.npmjs.com/package/antigravity-rtl-patcher)
+[![npm downloads](https://img.shields.io/npm/dt/antigravity-rtl-patcher)](https://www.npmjs.com/package/antigravity-rtl-patcher)
+[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 ---
 
-## 🧬 How It Works
-
-Antigravity is built on Electron. This CLI tool directly patches the app's core workbench files to inject a smart **MutationObserver** engine that:
-
-1. 🔍 **Watches** the DOM for new chat messages and AI responses in real-time
-2. 🧠 **Detects** Persian/Arabic/Hebrew text using Unicode analysis with ratio-based scoring
-3. 🎨 **Applies** `direction: rtl` and `unicode-bidi: plaintext` only where needed
-4. ✍️ **Injects** the beautiful **Vazirmatn** font for perfect Persian/Arabic readability
-5. 🔒 **Isolates** English code blocks inside RTL text so they don't break
-6. 🎛️ **Toggle Panel** — Enable/disable RTL support anytime via the in-app panel
-
----
-
-## ⚡ Quick Start
+## Install
 
 ```bash
-# Linux / macOS
 npx antigravity-rtl-patcher patch
+```
 
-# If installed in system directory (e.g., /opt/)
+If Antigravity is installed in a system directory, use `sudo`:
+
+```bash
 sudo npx antigravity-rtl-patcher patch
 ```
 
+Restart Antigravity after patching.
+
+## Uninstall
+
 ```bash
-# Windows (Run terminal as Administrator if needed)
-npx antigravity-rtl-patcher patch
+npx antigravity-rtl-patcher restore
 ```
 
-That's it. Restart Antigravity and enjoy native RTL support. ✨
+This restores the original `app.asar` from the backup created during patching.
 
----
-
-## 🎛️ In-App Toggle
-
-After patching, a small **RTL icon** appears at the bottom of Antigravity's status bar. Click it to open the settings panel:
-
-- **Enabled** — Toggle RTL support on/off instantly
-- Settings are saved automatically and persist across restarts
-- Works on every page — enable/disable applies everywhere
-
----
-
-## 📖 Commands
+## Commands
 
 | Command | Description |
-|---------|-------------|
-| `agy-rtl patch` | Inject RTL support into Antigravity |
-| `agy-rtl restore` | Remove patch and restore original files |
-| `agy-rtl status` | Check if Antigravity is currently patched |
-| `agy-rtl patch --path /custom/path` | Patch a custom installation directory |
+|---|---|
+| `agy-rtl patch` | Apply RTL patch |
+| `agy-rtl restore` | Remove patch, restore original |
+| `agy-rtl status` | Show current patch status |
+| `agy-rtl patch --path /custom/path` | Patch a custom installation |
 
----
+## How it works
 
-## 🔄 After Updates
+Antigravity is an Electron app. The patcher extracts `app.asar`, appends an RTL engine to the preload script, and repacks the archive. The engine uses a `MutationObserver` to detect Persian, Arabic, and Hebrew text in real-time and applies `direction: rtl` where needed.
 
-When Antigravity updates, the patch may be overwritten. Simply run the patch command again:
+After patching, an RTL icon appears at the bottom of the Antigravity window. Click it to open a settings panel where you can enable or disable RTL support. The setting persists across restarts via `localStorage`.
+
+### What the engine does
+
+- Detects RTL text using Unicode range analysis with ratio-based scoring
+- Applies directional styling only to elements that contain RTL text
+- Injects the Vazirmatn font for improved Persian/Arabic readability
+- Preserves LTR direction for code blocks inside RTL text
+- Provides a toggle UI to enable/disable at any time
+
+## After Antigravity updates
+
+Updates may overwrite the patch. Run the patch command again:
 
 ```bash
 npx antigravity-rtl-patcher patch
 ```
 
----
+## Supported platforms
 
-## 🏗️ Architecture
+| Platform | Typical install locations |
+|---|---|
+| Linux | `/opt/antigravity`, `~/Downloads/Antigravity-x64` |
+| macOS | `/Applications/Antigravity.app` |
+| Windows | `%LOCALAPPDATA%\Programs\Antigravity` |
 
-```
-antigravity-rtl-patcher/
-├── bin/
-│   └── cli.js              # CLI entry point (commander-based)
-├── src/
-│   ├── patcher.js           # Core logic: backup, inject, repack
-│   ├── paths.js             # OS-aware installation path detection
-│   └── utils.js             # Permission checks & helpers
-├── payload/
-│   ├── rtl-engine.js        # MutationObserver RTL engine + Toggle UI
-│   └── styles.css           # Vazirmatn font + RTL + Panel styles
-├── package.json
-└── README.md
-```
+Custom paths are supported via `--path`.
 
-### Supported Installation Types
+## Contributing
 
-| Type | Description | Method |
-|------|-------------|--------|
-| **Unpacked** | App with `resources/app/` directory | Direct file modification |
-| **ASAR** | App bundled as `app.asar` | Extract → Patch → Repack |
+Issues and pull requests are welcome at [github.com/VaFa1726/antigravity-rtl-patcher](https://github.com/VaFa1726/antigravity-rtl-patcher).
 
----
+## License
 
-## 🔐 Permissions
-
-- **User directory installs** (e.g., `~/Downloads/`): No special permissions needed
-- **System directory installs** (e.g., `/opt/`): Requires `sudo` on Linux/macOS
-
----
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome!
-
-1. Fork the repo
-2. Create your feature branch (`git checkout -b feature/amazing`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing`)
-5. Open a Pull Request
-
-## 📄 License
-
-[MIT](https://choosealicense.com/licenses/mit/)
+MIT

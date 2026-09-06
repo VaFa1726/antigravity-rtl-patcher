@@ -7,68 +7,52 @@ const chalk = require('chalk');
 const { findInstallations } = require('./paths');
 const { checkPermissions, delay } = require('./utils');
 
-const PATCH_MARKER = 'agy-rtl-engine';
+const PATCH_MARKER = '__AGY_RTL_INJECTED__';
 const BACKUP_SUFFIX = '.agy-rtl-backup';
-const ENGINE_FILENAME = 'agy-rtl-engine.js';
-const STYLES_FILENAME = 'agy-rtl-styles.css';
+const PRELOAD_FILENAME = 'preload.js';
 
 /**
- * Patch an unpacked Antigravity installation.
- * Copies payload files and modifies workbench.html.
+ * Find preload.js inside an extracted ASAR directory.
+ * Searches common locations and falls back to recursive search.
  */
-async function patchUnpacked(installation, spinner) {
-  const { workbenchDir, workbenchHtml } = installation;
+function findPreloadJs(extractDir) {
+  // Common locations
+  const candidates = [
+    path.join(extractDir, 'dist', PRELOAD_FILENAME),
+    path.join(extractDir, PRELOAD_FILENAME),
+    path.join(extractDir, 'out', PRELOAD_FILENAME),
+    path.join(extractDir, 'app', PRELOAD_FILENAME),
+    path.join(extractDir, 'src', PRELOAD_FILENAME),
+  ];
 
-  // 1. Backup
-  const backupPath = workbenchHtml + BACKUP_SUFFIX;
-  if (!fs.existsSync(backupPath)) {
-    await fs.copy(workbenchHtml, backupPath);
-    spinner.succeed('Backup created: ' + chalk.gray(path.basename(backupPath)));
-  } else {
-    spinner.info('Backup already exists, skipping.');
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
   }
 
-  // 2. Check if already patched
-  spinner.start('Checking patch status...');
-  const htmlContent = await fs.readFile(workbenchHtml, 'utf-8');
-  if (htmlContent.includes(PATCH_MARKER)) {
-    spinner.info('IDE is already patched. Use "restore" first to re-patch.');
-    return;
+  // Recursive fallback — find any preload.js (skip node_modules)
+  function searchDir(dir, depth) {
+    if (depth > 5) return null;
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.name === 'node_modules') continue;
+        const full = path.join(dir, entry.name);
+        if (entry.isFile() && entry.name === PRELOAD_FILENAME) return full;
+        if (entry.isDirectory()) {
+          const found = searchDir(full, depth + 1);
+          if (found) return found;
+        }
+      }
+    } catch (e) { /* ignore permission errors */ }
+    return null;
   }
 
-  // 3. Copy payload files to workbench directory
-  spinner.start('Copying RTL engine & styles...');
-  const payloadDir = path.join(__dirname, '..', 'payload');
-
-  await fs.copy(
-    path.join(payloadDir, 'rtl-engine.js'),
-    path.join(workbenchDir, ENGINE_FILENAME)
-  );
-  await fs.copy(
-    path.join(payloadDir, 'styles.css'),
-    path.join(workbenchDir, STYLES_FILENAME)
-  );
-  spinner.succeed('Payload files copied.');
-
-  // 4. Inject references into workbench.html
-  spinner.start('Injecting RTL support into workbench...');
-  let modified = htmlContent;
-
-  // Add stylesheet link in <head> before </head>
-  const styleTag = `\n\t<!-- AGY-RTL-PATCH -->\n\t<link rel="stylesheet" href="./${STYLES_FILENAME}">\n\t<!-- /AGY-RTL-PATCH -->`;
-  modified = modified.replace('</head>', `${styleTag}\n</head>`);
-
-  // Add script before </html>
-  const scriptTag = `\n<!-- AGY-RTL-PATCH -->\n<script src="./${ENGINE_FILENAME}" id="${PATCH_MARKER}"></script>\n<!-- /AGY-RTL-PATCH -->`;
-  modified = modified.replace('</html>', `${scriptTag}\n</html>`);
-
-  await fs.writeFile(workbenchHtml, modified, 'utf-8');
-  spinner.succeed('RTL support injected into workbench.');
+  return searchDir(extractDir, 0);
 }
 
 /**
  * Patch an ASAR-packed Antigravity installation.
- * Extracts the asar, patches files, and repacks.
+ * Extracts the ASAR, injects RTL engine into preload.js, and repacks.
  */
 async function patchAsar(installation, spinner) {
   const { asarPath } = installation;
@@ -91,134 +75,47 @@ async function patchAsar(installation, spinner) {
     asar.extractAll(asarPath, tmpDir);
     spinner.succeed('Extracted successfully.');
 
-    // 3. Find workbench.html inside extracted asar
-    const possiblePaths = [
-      path.join(tmpDir, 'out', 'vs', 'code', 'electron-browser', 'workbench', 'workbench.html'),
-      path.join(tmpDir, 'index.html'),
-      path.join(tmpDir, 'dist', 'index.html'),
-      path.join(tmpDir, 'out', 'index.html'),
-    ];
+    // 3. Find preload.js
+    spinner.start('Searching for preload.js...');
+    const preloadPath = findPreloadJs(tmpDir);
 
-    let targetHtml = null;
-    for (const p of possiblePaths) {
-      if (fs.existsSync(p)) {
-        targetHtml = p;
-        break;
-      }
-    }
-
-    if (!targetHtml) {
-      spinner.warn('No patchable HTML found in this package. Skipping.');
+    if (!preloadPath) {
+      spinner.warn('No preload.js found in this package. Skipping.');
       await fs.remove(tmpDir);
       return;
     }
 
-    // Check if already patched
-    const htmlContent = await fs.readFile(targetHtml, 'utf-8');
-    if (htmlContent.includes(PATCH_MARKER)) {
-      spinner.info('ASAR is already patched.');
+    spinner.succeed('Found: ' + chalk.gray(path.relative(tmpDir, preloadPath)));
+
+    // 4. Check if already patched
+    const preloadContent = await fs.readFile(preloadPath, 'utf-8');
+    if (preloadContent.includes(PATCH_MARKER)) {
+      spinner.info('Already patched. Use "restore" first to re-patch.');
       await fs.remove(tmpDir);
       return;
     }
 
-    // 4. Copy payload files
-    spinner.start('Injecting RTL engine...');
-    const payloadDir = path.join(__dirname, '..', 'payload');
-    const targetDir = path.dirname(targetHtml);
+    // 5. Read injection payload
+    spinner.start('Injecting RTL engine into preload...');
+    const payloadPath = path.join(__dirname, '..', 'payload', 'preload-inject.js');
+    const payload = await fs.readFile(payloadPath, 'utf-8');
 
-    await fs.copy(path.join(payloadDir, 'rtl-engine.js'), path.join(targetDir, ENGINE_FILENAME));
-    await fs.copy(path.join(payloadDir, 'styles.css'), path.join(targetDir, STYLES_FILENAME));
+    // 6. Append payload to preload.js
+    const injected = preloadContent + '\n\n// ' + PATCH_MARKER + '\n' + payload;
+    await fs.writeFile(preloadPath, injected, 'utf-8');
+    spinner.succeed('RTL engine injected into preload.');
 
-    // 5. Modify HTML
-    let modified = htmlContent;
-    const styleTag = `\n\t<!-- AGY-RTL-PATCH -->\n\t<link rel="stylesheet" href="./${STYLES_FILENAME}">\n\t<!-- /AGY-RTL-PATCH -->`;
-    const scriptTag = `\n<!-- AGY-RTL-PATCH -->\n<script src="./${ENGINE_FILENAME}" id="${PATCH_MARKER}"></script>\n<!-- /AGY-RTL-PATCH -->`;
-
-    if (modified.includes('</head>')) {
-      modified = modified.replace('</head>', `${styleTag}\n</head>`);
-    }
-    if (modified.includes('</html>')) {
-      modified = modified.replace('</html>', `${scriptTag}\n</html>`);
-    } else if (modified.includes('</body>')) {
-      modified = modified.replace('</body>', `${scriptTag}\n</body>`);
-    } else {
-      modified += scriptTag;
-    }
-
-    await fs.writeFile(targetHtml, modified, 'utf-8');
-    spinner.succeed('RTL engine injected.');
-
-    // 6. Repack
+    // 7. Repack
     spinner.start('Repacking app.asar...');
     await delay(300);
     await asar.createPackage(tmpDir, asarPath);
     spinner.succeed('Repacked successfully.');
 
   } finally {
-    // Cleanup temp dir
     if (fs.existsSync(tmpDir)) {
       await fs.remove(tmpDir);
     }
   }
-}
-
-/**
- * Main patch function.
- */
-async function patch(customPath) {
-  const spinner = ora('Searching for Antigravity...').start();
-
-  const installations = findInstallations(customPath);
-
-  if (installations.length === 0) {
-    spinner.fail('Antigravity installation not found.');
-    console.error(chalk.yellow('\nTry specifying the path manually:'));
-    console.error(chalk.cyan('  agy-rtl patch --path /path/to/Antigravity\n'));
-    throw new Error('Installation not found.');
-  }
-
-  spinner.succeed(`Found ${installations.length} installation(s).`);
-
-  for (const inst of installations) {
-    console.log(chalk.cyan(`\n📂 Patching: ${chalk.white(inst.basePath)}`));
-    console.log(chalk.gray(`   Type: ${inst.type === 'unpacked' ? 'Unpacked App' : 'ASAR Package'}`));
-
-    checkPermissions(inst.basePath);
-
-    if (inst.type === 'unpacked') {
-      await patchUnpacked(inst, ora());
-    } else {
-      await patchAsar(inst, ora());
-    }
-  }
-
-  console.log(chalk.green.bold('\n✨ Antigravity successfully patched with RTL support!'));
-  console.log(chalk.cyan('   Please restart Antigravity for changes to take effect.\n'));
-}
-
-/**
- * Restore an unpacked installation from backup.
- */
-async function restoreUnpacked(installation, spinner) {
-  const { workbenchDir, workbenchHtml } = installation;
-  const backupPath = workbenchHtml + BACKUP_SUFFIX;
-
-  if (fs.existsSync(backupPath)) {
-    spinner.start('Restoring workbench.html from backup...');
-    await fs.copy(backupPath, workbenchHtml);
-    await fs.remove(backupPath);
-    spinner.succeed('Workbench restored.');
-  } else {
-    spinner.warn('No backup found for workbench.html.');
-  }
-
-  // Remove injected payload files
-  const engineFile = path.join(workbenchDir, ENGINE_FILENAME);
-  const stylesFile = path.join(workbenchDir, STYLES_FILENAME);
-
-  if (fs.existsSync(engineFile)) await fs.remove(engineFile);
-  if (fs.existsSync(stylesFile)) await fs.remove(stylesFile);
-  spinner.succeed('Payload files removed.');
 }
 
 /**
@@ -232,10 +129,36 @@ async function restoreAsar(installation, spinner) {
     spinner.start('Restoring app.asar from backup...');
     await fs.copy(backupPath, asarPath);
     await fs.remove(backupPath);
-    spinner.succeed('ASAR restored.');
+    spinner.succeed('Original app.asar restored.');
   } else {
     spinner.warn('No backup found for app.asar.');
   }
+}
+
+/**
+ * Main patch function.
+ */
+async function patch(customPath) {
+  const spinner = ora('Searching for Antigravity...').start();
+  const installations = findInstallations(customPath);
+
+  if (installations.length === 0) {
+    spinner.fail('Antigravity installation not found.');
+    console.error(chalk.yellow('\nTry specifying the path manually:'));
+    console.error(chalk.cyan('  agy-rtl patch --path /path/to/Antigravity\n'));
+    throw new Error('Installation not found.');
+  }
+
+  spinner.succeed('Found ' + installations.length + ' installation(s).');
+
+  for (const inst of installations) {
+    console.log(chalk.cyan('\n  Patching: ' + chalk.white(inst.basePath)));
+    checkPermissions(inst.basePath);
+    await patchAsar(inst, ora());
+  }
+
+  console.log(chalk.green.bold('\n  Antigravity patched with RTL support.'));
+  console.log(chalk.cyan('  Restart Antigravity to see the changes.\n'));
 }
 
 /**
@@ -250,22 +173,16 @@ async function restore(customPath) {
     throw new Error('Installation not found.');
   }
 
-  spinner.succeed(`Found ${installations.length} installation(s).`);
+  spinner.succeed('Found ' + installations.length + ' installation(s).');
 
   for (const inst of installations) {
-    console.log(chalk.yellow(`\n🔄 Restoring: ${chalk.white(inst.basePath)}`));
-
+    console.log(chalk.yellow('\n  Restoring: ' + chalk.white(inst.basePath)));
     checkPermissions(inst.basePath);
-
-    if (inst.type === 'unpacked') {
-      await restoreUnpacked(inst, ora());
-    } else {
-      await restoreAsar(inst, ora());
-    }
+    await restoreAsar(inst, ora());
   }
 
-  console.log(chalk.green.bold('\n✨ Antigravity restored to original state!'));
-  console.log(chalk.cyan('   Please restart Antigravity for changes to take effect.\n'));
+  console.log(chalk.green.bold('\n  Antigravity restored to original state.'));
+  console.log(chalk.cyan('  Restart Antigravity for changes to take effect.\n'));
 }
 
 /**
@@ -280,19 +197,12 @@ async function status(customPath) {
     return;
   }
 
-  spinner.succeed(`Found ${installations.length} installation(s).`);
+  spinner.succeed('Found ' + installations.length + ' installation(s).');
 
   for (const inst of installations) {
-    let isPatched = false;
-
-    if (inst.type === 'unpacked') {
-      const html = await fs.readFile(inst.workbenchHtml, 'utf-8');
-      isPatched = html.includes(PATCH_MARKER);
-    }
-
-    const statusIcon = isPatched ? chalk.green('● PATCHED') : chalk.red('○ NOT PATCHED');
-    console.log(`\n  ${statusIcon}  ${chalk.white(inst.basePath)}`);
-    console.log(chalk.gray(`            Type: ${inst.type === 'unpacked' ? 'Unpacked App' : 'ASAR Package'}`));
+    const backupExists = fs.existsSync(inst.asarPath + BACKUP_SUFFIX);
+    const statusIcon = backupExists ? chalk.green('PATCHED') : chalk.red('NOT PATCHED');
+    console.log('\n  ' + statusIcon + '  ' + chalk.white(inst.basePath));
   }
   console.log('');
 }

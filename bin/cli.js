@@ -5,16 +5,13 @@ const chalk = require('chalk');
 const { patch, restore, status } = require('../src/patcher');
 
 const BANNER = `
-${chalk.cyan('╔══════════════════════════════════════════════╗')}
-${chalk.cyan('║')}  ${chalk.bold.white('🌌 Antigravity RTL Patcher')}  ${chalk.gray('v2.1.0')}        ${chalk.cyan('║')}
-${chalk.cyan('║')}  ${chalk.gray('Intelligent RTL support for Antigravity')}     ${chalk.cyan('║')}
-${chalk.cyan('╚══════════════════════════════════════════════╝')}
+${chalk.cyan('Antigravity Smart RTL Patcher')} ${chalk.gray('v2.2.0')}
 `;
 
 program
   .name('agy-rtl')
-  .description('RTL & Typography patcher for Antigravity')
-  .version('2.1.0');
+  .description('RTL patcher for Antigravity')
+  .version('2.2.0');
 
 program
   .command('patch')
@@ -25,35 +22,35 @@ program
     try {
       await patch(options.path);
     } catch (err) {
-      console.error(chalk.red('\n❌ Patch failed:'), err.message);
+      console.error(chalk.red('\nPatch failed:'), err.message);
       process.exit(1);
     }
   });
 
 program
   .command('restore')
-  .description('Restore Antigravity to its original state')
+  .description('Remove RTL patch and restore Antigravity')
   .option('-p, --path <path>', 'Custom path to Antigravity installation')
   .action(async (options) => {
     console.log(BANNER);
     try {
       await restore(options.path);
     } catch (err) {
-      console.error(chalk.red('\n❌ Restore failed:'), err.message);
+      console.error(chalk.red('\nRestore failed:'), err.message);
       process.exit(1);
     }
   });
 
 program
   .command('status')
-  .description('Check if Antigravity is currently patched')
+  .description('Check current patch status')
   .option('-p, --path <path>', 'Custom path to Antigravity installation')
   .action(async (options) => {
     console.log(BANNER);
     try {
       await status(options.path);
     } catch (err) {
-      console.error(chalk.red('\n❌ Status check failed:'), err.message);
+      console.error(chalk.red('\nStatus check failed:'), err.message);
       process.exit(1);
     }
   });
