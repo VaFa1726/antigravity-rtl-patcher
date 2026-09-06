@@ -1,6 +1,6 @@
 {
   "name": "antigravity-rtl-patcher",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Advanced RTL and Persian/Arabic typography patcher for Antigravity with customizable UI",
   "main": "src/patcher.js",
   "bin": {
