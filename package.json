@@ -1,32 +1,50 @@
 {
   "name": "antigravity-rtl-patcher",
-  "version": "1.0.0",
-  "description": "An elegant RTL and typography patcher for Antigravity IDE based on Electron",
+  "version": "2.0.0",
+  "description": "🌌 Intelligent RTL & Persian/Arabic typography patcher for Antigravity IDE",
   "main": "src/patcher.js",
   "bin": {
+    "antigravity-rtl-patcher": "./bin/cli.js",
     "agy-rtl": "./bin/cli.js"
   },
   "scripts": {
-    "start": "node ./bin/cli.js"
+    "start": "node ./bin/cli.js",
+    "patch": "node ./bin/cli.js patch",
+    "restore": "node ./bin/cli.js restore"
   },
   "keywords": [
     "antigravity",
     "rtl",
     "farsi",
+    "persian",
     "arabic",
     "hebrew",
     "patcher",
     "electron",
-    "asar"
+    "asar",
+    "ide",
+    "vscode",
+    "right-to-left",
+    "bidirectional"
   ],
   "author": "VaFa1726",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VaFa1726/antigravity-rtl-patcher.git"
+  },
+  "bugs": {
+    "url": "https://github.com/VaFa1726/antigravity-rtl-patcher/issues"
+  },
+  "homepage": "https://github.com/VaFa1726/antigravity-rtl-patcher#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "dependencies": {
     "@electron/asar": "^3.2.14",
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
     "fs-extra": "^11.2.0",
-    "ora": "^5.4.1",
-    "sudo-prompt": "^9.2.1"
+    "ora": "^5.4.1"
   }
 }

@@ -1,73 +1,156 @@
-(function() {
-  console.log('🚀 AGY RTL Engine Initialized');
+/**
+ * AGY RTL Engine v2.0.0
+ * Intelligent RTL detection & styling for Antigravity IDE
+ * 
+ * This script runs inside the Electron renderer process.
+ * It uses MutationObserver to watch for DOM changes and
+ * automatically applies RTL direction to Persian/Arabic/Hebrew text.
+ * 
+ * CSP Compatible: No use of innerHTML, eval, or inline event handlers.
+ */
+(function () {
+  'use strict';
 
-  // Regex to detect RTL characters (Arabic, Persian, Hebrew)
-  const rtlRegex = /[\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC]/;
+  // Unicode ranges for RTL scripts
+  const RTL_REGEX = /[\u0591-\u07FF\u200F\u202B\u202E\uFB1D-\uFDFD\uFE70-\uFEFC]/;
 
+  // Minimum ratio of RTL characters to consider text as RTL
+  const RTL_CHAR_REGEX = /[\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC]/g;
+  const MIN_RTL_RATIO = 0.3;
+
+  // Attribute to mark processed elements
+  const PROCESSED_ATTR = 'data-agy-rtl';
+
+  // Selectors to target (chat messages, markdown output, editor tooltips)
+  const TARGET_SELECTORS = [
+    // Chat and AI response areas
+    '.chat-response-content p',
+    '.chat-response-content li',
+    '.chat-response-content h1',
+    '.chat-response-content h2',
+    '.chat-response-content h3',
+    '.chat-response-content h4',
+    '.chat-response-content blockquote',
+    // Markdown preview
+    '.markdown-body p',
+    '.markdown-body li',
+    '.markdown-body h1',
+    '.markdown-body h2',
+    '.markdown-body h3',
+    '.markdown-body blockquote',
+    // Generic rendered text
+    '.rendered-markdown p',
+    '.rendered-markdown li',
+    '.rendered-markdown h1',
+    '.rendered-markdown h2',
+    '.rendered-markdown h3',
+    '.rendered-markdown blockquote',
+    // Monaco editor hover & tooltips
+    '.monaco-hover-content p',
+    '.suggest-details p',
+    // Notifications
+    '.notification-toast-container p',
+    // Generic paragraphs and spans in webview
+    'p', 'li', 'h1', 'h2', 'h3', 'h4', 'blockquote',
+  ].join(', ');
+
+  /**
+   * Determine if a text string is primarily RTL.
+   */
   function isRTL(text) {
-    // Basic heuristic: check if any RTL char exists
-    return rtlRegex.test(text);
+    if (!text || text.trim().length === 0) return false;
+
+    // Quick check: does it contain any RTL character at all?
+    if (!RTL_REGEX.test(text)) return false;
+
+    // Count RTL characters vs total alphabetic characters
+    const rtlMatches = text.match(RTL_CHAR_REGEX);
+    if (!rtlMatches) return false;
+
+    const alphaChars = text.replace(/[\s\d\W]/g, '').length;
+    if (alphaChars === 0) return false;
+
+    return (rtlMatches.length / alphaChars) >= MIN_RTL_RATIO;
   }
 
+  /**
+   * Apply RTL styling to an element.
+   */
   function applyRTL(element) {
-    // Only process text nodes or direct containers
-    const textContent = element.textContent || element.innerText || '';
-    
-    if (isRTL(textContent)) {
-      element.setAttribute('data-agy-rtl', 'true');
+    if (element.getAttribute(PROCESSED_ATTR)) return;
+
+    const text = element.textContent || '';
+    if (isRTL(text)) {
+      element.setAttribute(PROCESSED_ATTR, 'true');
       element.style.direction = 'rtl';
       element.style.textAlign = 'start';
-      
-      // Crucial for mixed English/Farsi content (like code snippets in Farsi text)
-      element.style.unicodeBidi = 'plaintext'; 
-      
-      // Mark as processed
-      element.classList.add('agy-rtl-processed');
+      element.style.unicodeBidi = 'plaintext';
     }
   }
 
-  // Observe DOM mutations for dynamically added chat messages
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      if (mutation.addedNodes.length) {
-        mutation.addedNodes.forEach((node) => {
+  /**
+   * Scan a subtree for elements that need RTL.
+   */
+  function scanElement(root) {
+    if (!root || root.nodeType !== Node.ELEMENT_NODE) return;
+
+    // Check if the root itself matches
+    try {
+      if (root.matches && root.matches(TARGET_SELECTORS)) {
+        applyRTL(root);
+      }
+    } catch (e) {
+      // Ignore selector errors
+    }
+
+    // Scan children
+    try {
+      const elements = root.querySelectorAll(TARGET_SELECTORS);
+      elements.forEach(function (el) {
+        applyRTL(el);
+      });
+    } catch (e) {
+      // Ignore errors
+    }
+  }
+
+  /**
+   * Initialize the MutationObserver.
+   */
+  function initObserver() {
+    var observer = new MutationObserver(function (mutations) {
+      mutations.forEach(function (mutation) {
+        // Handle added nodes
+        mutation.addedNodes.forEach(function (node) {
           if (node.nodeType === Node.ELEMENT_NODE) {
-            // Apply logic to the node itself if it has text
-            if (node.textContent && node.textContent.trim().length > 0) {
-              // We should probably target specific chat bubble selectors here if we knew them.
-              // For a generic approach, we look for paragraphs or divs with raw text.
-              const elementsToScan = node.querySelectorAll('p, span, div.message-content, div.chat-bubble, li, h1, h2, h3');
-              elementsToScan.forEach(el => {
-                if (!el.classList.contains('agy-rtl-processed')) {
-                  applyRTL(el);
-                }
-              });
-              
-              // Also check the root node added
-              if (!node.classList.contains('agy-rtl-processed')) {
-                 applyRTL(node);
-              }
-            }
+            scanElement(node);
           }
         });
-      }
-    });
-  });
 
-  // Start observing
-  window.addEventListener('load', () => {
-    observer.observe(document.body, { 
-      childList: true, 
+        // Handle text content changes
+        if (mutation.type === 'characterData' && mutation.target.parentElement) {
+          applyRTL(mutation.target.parentElement);
+        }
+      });
+    });
+
+    observer.observe(document.body, {
+      childList: true,
       subtree: true,
-      characterData: true
+      characterData: true,
     });
-    
-    // Initial scan
-    document.querySelectorAll('p, span, div, li, h1, h2, h3').forEach(el => {
-      if (el.textContent && el.textContent.trim().length > 0 && !el.children.length) {
-         applyRTL(el);
-      }
-    });
-  });
 
+    // Initial full-page scan
+    scanElement(document.body);
+  }
+
+  // Start when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initObserver);
+  } else {
+    // DOM already loaded, wait a moment for dynamic content
+    setTimeout(initObserver, 500);
+  }
+
+  console.log('%c🌌 AGY RTL Engine v2.0.0 loaded', 'color: cyan; font-weight: bold;');
 })();
