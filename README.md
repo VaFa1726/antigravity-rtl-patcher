@@ -17,8 +17,16 @@
 
 ## 🚀 Installation
 
+### Option 1: From npm (Recommended)
+
 ```bash
 npx antigravity-rtl-patcher@latest patch
+```
+
+### Option 2: Direct from GitHub
+
+```bash
+npx github:VaFa1726/antigravity-rtl-patcher patch
 ```
 
 Then restart Antigravity and press `Alt + R` to toggle RTL mode.
@@ -42,9 +50,17 @@ npx antigravity-rtl-patcher patch --path /your/custom/path
 
 Re-apply the patch after updating Antigravity:
 
+**From npm:**
 ```bash
 npx antigravity-rtl-patcher@latest patch
 ```
+
+**From GitHub:**
+```bash
+npx github:VaFa1726/antigravity-rtl-patcher patch
+```
+
+> **💡 Tip:** Use GitHub installation to get the latest changes immediately. npm version is updated every 24 hours.
 
 ## 🛠️ Troubleshooting
 
