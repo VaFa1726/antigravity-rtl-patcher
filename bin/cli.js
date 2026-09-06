@@ -5,13 +5,13 @@ const chalk = require('chalk');
 const { patch, restore, status } = require('../src/patcher');
 
 const BANNER = `
-${chalk.cyan('Antigravity Smart RTL Patcher')} ${chalk.gray('v2.2.0')}
+${chalk.cyan('Antigravity Smart RTL Patcher')} ${chalk.gray('v2.3.0')}
 `;
 
 program
   .name('agy-rtl')
   .description('RTL patcher for Antigravity')
-  .version('2.2.0');
+  .version('2.3.0');
 
 program
   .command('patch')

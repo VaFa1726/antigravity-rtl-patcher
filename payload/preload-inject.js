@@ -1,7 +1,9 @@
 /**
  * AGY RTL — Preload Injection Snippet
  * Appended to Antigravity's preload.js at patch time.
- * Injects the RTL engine + toggle panel into every renderer page.
+ *
+ * Only applies RTL direction to individual text elements containing
+ * Persian/Arabic/Hebrew characters. Does NOT change the app layout.
  *
  * MARKER: __AGY_RTL_INJECTED__
  */
@@ -30,51 +32,28 @@ function _agyRtlRendererMain() {
 
   var RTL_REGEX = /[\u0591-\u07FF\u200F\u202B\u202E\uFB1D-\uFDFD\uFE70-\uFEFC]/;
   var RTL_CHAR_REGEX = /[\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC]/g;
-  var MIN_RTL_RATIO = 0.3;
+  var MIN_RTL_RATIO = 0.25;
 
   // ─── State ───────────────────────────────────────────────
   var isEnabled = getStoredState();
   var observer = null;
   var panelVisible = false;
+  var hoverTimeout = null;
 
   // ─── CSS ─────────────────────────────────────────────────
   var CSS = `
     @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap');
 
-    /* === Global RTL Mode === */
-    html.agy-rtl-active {
-      direction: rtl !important;
-    }
-    html.agy-rtl-active body {
+    /* RTL styling — applied per-element, NOT globally */
+    [${PROCESSED_ATTR}="true"] {
       direction: rtl !important;
       text-align: right !important;
-    }
-
-    /* Keep code and technical elements LTR */
-    html.agy-rtl-active code,
-    html.agy-rtl-active pre,
-    html.agy-rtl-active .monaco-editor,
-    html.agy-rtl-active .monaco-tokenized-source,
-    html.agy-rtl-active [class*="CodeMirror"],
-    html.agy-rtl-active input[type="text"],
-    html.agy-rtl-active input[type="url"],
-    html.agy-rtl-active input[type="email"],
-    html.agy-rtl-active textarea.inputarea,
-    html.agy-rtl-active .terminal,
-    html.agy-rtl-active .xterm {
-      direction: ltr !important;
-      text-align: left !important;
-      unicode-bidi: isolate !important;
-    }
-
-    /* Font for RTL text */
-    html.agy-rtl-active [${PROCESSED_ATTR}="true"] {
+      unicode-bidi: plaintext !important;
       font-family: 'Vazirmatn', system-ui, -apple-system, 'Segoe UI', sans-serif !important;
-      line-height: 1.85 !important;
-      word-spacing: 0.02em;
+      line-height: 1.8 !important;
     }
 
-    /* Preserve code inside RTL blocks */
+    /* Keep code LTR inside RTL blocks */
     [${PROCESSED_ATTR}="true"] code,
     [${PROCESSED_ATTR}="true"] pre {
       direction: ltr !important;
@@ -95,40 +74,42 @@ function _agyRtlRendererMain() {
     /* === Status Bar Icon === */
     .agy-rtl-status-icon {
       position: fixed;
-      bottom: 2px;
-      right: 70px;
+      bottom: 6px;
+      right: 16px;
       z-index: 99999;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
-      height: 20px;
-      padding: 0 8px;
+      gap: 6px;
+      height: 28px;
+      padding: 0 12px;
       cursor: pointer;
-      border-radius: 3px;
+      border-radius: 14px;
       user-select: none;
       -webkit-user-select: none;
-      transition: background .15s, opacity .15s;
-      opacity: .75;
+      transition: background .2s, opacity .2s, box-shadow .2s;
+      opacity: .6;
       font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: .02em;
-      color: #999;
-      background: transparent;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .03em;
+      color: #888;
+      background: rgba(128,128,128,.08);
     }
     .agy-rtl-status-icon:hover {
       opacity: 1;
-      background: rgba(255,255,255,.08);
-      color: #ddd;
+      background: rgba(128,128,128,.15);
+      color: #aaa;
     }
     .agy-rtl-status-icon.active {
-      color: #6cb6ff;
-      opacity: .9;
+      color: #5ba0d6;
+      opacity: .85;
+      background: rgba(91,160,214,.08);
     }
     .agy-rtl-status-icon.active:hover {
       opacity: 1;
-      color: #8ecaff;
+      background: rgba(91,160,214,.15);
+      box-shadow: 0 0 12px rgba(91,160,214,.12);
     }
     .agy-rtl-status-icon svg {
       flex-shrink: 0;
@@ -138,20 +119,22 @@ function _agyRtlRendererMain() {
     .agy-rtl-panel {
       position: fixed;
       z-index: 100000;
-      width: 280px;
+      width: 260px;
       background: #1e1e1e;
-      border: 1px solid #383838;
+      border: 1px solid #333;
       border-radius: 10px;
       box-shadow: 0 12px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.04);
       padding: 0;
       opacity: 0;
       visibility: hidden;
       transform: translateY(6px);
-      transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+      transition: opacity .15s ease, transform .15s ease, visibility .15s ease;
       font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
       font-size: 13px;
       color: #ccc;
       overflow: hidden;
+      direction: ltr !important;
+      text-align: left !important;
     }
     .agy-rtl-panel.visible {
       opacity: 1;
@@ -180,11 +163,6 @@ function _agyRtlRendererMain() {
     .agy-rtl-panel-label {
       font-size: 13px;
       color: #b0b0b0;
-    }
-    .agy-rtl-panel-sep {
-      height: 1px;
-      background: #2a2a2a;
-      margin: 4px 0;
     }
 
     /* Toggle */
@@ -234,7 +212,7 @@ function _agyRtlRendererMain() {
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      color: #6c7986;
+      color: #555;
       text-decoration: none;
       font-size: 11px;
       transition: color .15s;
@@ -261,23 +239,32 @@ function _agyRtlRendererMain() {
   }
   function applyRTL(el) {
     if (el.getAttribute(PROCESSED_ATTR)) return;
-    if (isRTL(el.textContent || '')) {
+    // Skip the RTL panel/icon itself
+    if (el.closest && (el.closest('#' + PANEL_ID) || el.closest('#' + STATUS_ICON_ID))) return;
+    var text = el.textContent || '';
+    if (text.trim().length > 0 && isRTL(text)) {
       el.setAttribute(PROCESSED_ATTR, 'true');
-      el.style.unicodeBidi = 'plaintext';
     }
   }
   function removeRTL(el) {
     if (el.getAttribute(PROCESSED_ATTR)) {
       el.removeAttribute(PROCESSED_ATTR);
-      el.style.unicodeBidi = '';
     }
   }
 
-  // Target all text-bearing elements
-  var SELECTORS = 'p,li,h1,h2,h3,h4,h5,h6,blockquote,td,th,span,div,a,label,button,[class*="title"],[class*="label"],[class*="name"],[class*="text"],[class*="message"],[class*="content"],[class*="description"]';
+  // Wide selectors — catch all text-bearing elements
+  var SELECTORS = [
+    'p', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'blockquote', 'td', 'th', 'span', 'a', 'label',
+    'div', 'button',
+  ].join(',');
 
   function scanElement(root) {
     if (!root || root.nodeType !== 1) return;
+    // Skip our own UI
+    if (root.id === PANEL_ID || root.id === STATUS_ICON_ID) return;
+    if (root.closest && (root.closest('#' + PANEL_ID) || root.closest('#' + STATUS_ICON_ID))) return;
+
     try { if (root.matches && root.matches(SELECTORS)) applyRTL(root); } catch (e) {}
     try { root.querySelectorAll(SELECTORS).forEach(applyRTL); } catch (e) {}
   }
@@ -289,9 +276,6 @@ function _agyRtlRendererMain() {
 
   function startObserver() {
     if (observer) return;
-    // Apply global RTL
-    document.documentElement.classList.add('agy-rtl-active');
-
     observer = new MutationObserver(function (muts) {
       if (!isEnabled) return;
       muts.forEach(function (m) {
@@ -305,7 +289,6 @@ function _agyRtlRendererMain() {
 
   function stopObserver() {
     if (observer) { observer.disconnect(); observer = null; }
-    document.documentElement.classList.remove('agy-rtl-active');
     clearAllRTL();
   }
 
@@ -327,10 +310,10 @@ function _agyRtlRendererMain() {
     icon.className = 'agy-rtl-status-icon' + (isEnabled ? ' active' : '');
     icon.setAttribute('title', 'Antigravity Smart RTL');
 
-    // Globe + arrow SVG icon
+    // Globe SVG
     var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('width', '14');
-    svg.setAttribute('height', '14');
+    svg.setAttribute('width', '15');
+    svg.setAttribute('height', '15');
     svg.setAttribute('viewBox', '0 0 24 24');
     svg.setAttribute('fill', 'none');
     svg.setAttribute('stroke', 'currentColor');
@@ -338,33 +321,41 @@ function _agyRtlRendererMain() {
     svg.setAttribute('stroke-linecap', 'round');
     svg.setAttribute('stroke-linejoin', 'round');
 
-    // Globe circle
     var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    circle.setAttribute('cx', '12');
-    circle.setAttribute('cy', '12');
-    circle.setAttribute('r', '10');
+    circle.setAttribute('cx', '12'); circle.setAttribute('cy', '12'); circle.setAttribute('r', '10');
     svg.appendChild(circle);
-
-    // Globe horizontal line
     var line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     line1.setAttribute('x1', '2'); line1.setAttribute('y1', '12');
     line1.setAttribute('x2', '22'); line1.setAttribute('y2', '12');
     svg.appendChild(line1);
-
-    // Globe vertical ellipse
-    var ellipse = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    ellipse.setAttribute('d', 'M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z');
-    svg.appendChild(ellipse);
-
+    var ell = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    ell.setAttribute('d', 'M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z');
+    svg.appendChild(ell);
     icon.appendChild(svg);
 
-    // Label text
     var lbl = document.createElement('span');
     lbl.textContent = 'RTL';
     lbl.style.cssText = 'direction:ltr!important;';
     icon.appendChild(lbl);
 
-    icon.addEventListener('click', function (e) { e.stopPropagation(); togglePanel(); });
+    // Hover to open panel
+    icon.addEventListener('mouseenter', function () {
+      clearTimeout(hoverTimeout);
+      hoverTimeout = setTimeout(function () { showPanel(); }, 200);
+    });
+    icon.addEventListener('mouseleave', function () {
+      clearTimeout(hoverTimeout);
+      hoverTimeout = setTimeout(function () {
+        var panel = document.getElementById(PANEL_ID);
+        if (panel && !panel.matches(':hover')) hidePanel();
+      }, 300);
+    });
+    // Also toggle on click
+    icon.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (panelVisible) hidePanel(); else showPanel();
+    });
+
     document.body.appendChild(icon);
   }
 
@@ -374,7 +365,12 @@ function _agyRtlRendererMain() {
     var panel = document.createElement('div');
     panel.id = PANEL_ID;
     panel.className = 'agy-rtl-panel';
-    panel.style.cssText = 'direction:ltr!important;text-align:left!important;';
+
+    // Keep panel open on hover
+    panel.addEventListener('mouseenter', function () { clearTimeout(hoverTimeout); });
+    panel.addEventListener('mouseleave', function () {
+      hoverTimeout = setTimeout(function () { hidePanel(); }, 300);
+    });
 
     // Header
     var header = document.createElement('div');
@@ -389,7 +385,6 @@ function _agyRtlRendererMain() {
     var body = document.createElement('div');
     body.className = 'agy-rtl-panel-body';
 
-    // Toggle row
     var row = document.createElement('div');
     row.className = 'agy-rtl-panel-row';
     var label = document.createElement('span');
@@ -411,7 +406,7 @@ function _agyRtlRendererMain() {
     body.appendChild(row);
     panel.appendChild(body);
 
-    // Footer with GitHub
+    // Footer
     var footer = document.createElement('div');
     footer.className = 'agy-rtl-panel-footer';
     var ghLink = document.createElement('a');
@@ -421,10 +416,8 @@ function _agyRtlRendererMain() {
     ghLink.rel = 'noopener noreferrer';
 
     var ghSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    ghSvg.setAttribute('width', '12');
-    ghSvg.setAttribute('height', '12');
-    ghSvg.setAttribute('viewBox', '0 0 16 16');
-    ghSvg.setAttribute('fill', 'currentColor');
+    ghSvg.setAttribute('width', '12'); ghSvg.setAttribute('height', '12');
+    ghSvg.setAttribute('viewBox', '0 0 16 16'); ghSvg.setAttribute('fill', 'currentColor');
     var ghP = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     ghP.setAttribute('d', 'M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z');
     ghSvg.appendChild(ghP);
@@ -435,27 +428,27 @@ function _agyRtlRendererMain() {
     footer.appendChild(ghLink);
     panel.appendChild(footer);
 
-    // Events
+    // Toggle event
     cb.addEventListener('change', function () {
       isEnabled = cb.checked;
       setStoredState(isEnabled);
       updateState();
     });
 
+    // Close on Escape
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && panelVisible) hidePanel();
+    });
+
+    // Close on outside click
     document.addEventListener('click', function (e) {
       var p = document.getElementById(PANEL_ID);
       var ic = document.getElementById(STATUS_ICON_ID);
       if (p && panelVisible && !p.contains(e.target) && !ic.contains(e.target)) hidePanel();
     });
 
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && panelVisible) hidePanel();
-    });
-
     document.body.appendChild(panel);
   }
-
-  function togglePanel() { panelVisible ? hidePanel() : showPanel(); }
 
   function showPanel() {
     var panel = document.getElementById(PANEL_ID);
@@ -463,7 +456,7 @@ function _agyRtlRendererMain() {
     var icon = document.getElementById(STATUS_ICON_ID);
     if (icon) {
       var r = icon.getBoundingClientRect();
-      panel.style.bottom = (window.innerHeight - r.top + 6) + 'px';
+      panel.style.bottom = (window.innerHeight - r.top + 8) + 'px';
       panel.style.right = (window.innerWidth - r.right) + 'px';
     }
     panel.classList.add('visible');
