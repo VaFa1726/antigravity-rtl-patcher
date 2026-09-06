@@ -7,7 +7,17 @@ const os = require('os');
  * Both the IDE (unpacked) and the standalone app (asar) are supported.
  */
 function getSearchPaths() {
-  const home = os.homedir();
+  // When running with sudo, os.homedir() returns /root.
+  // Use SUDO_USER to resolve the actual user's home directory.
+  var home = os.homedir();
+  if (process.env.SUDO_USER) {
+    const sudoHome = process.platform === 'darwin'
+      ? path.join('/Users', process.env.SUDO_USER)
+      : path.join('/home', process.env.SUDO_USER);
+    if (fs.existsSync(sudoHome)) {
+      home = sudoHome;
+    }
+  }
   const platform = os.platform();
 
   const common = [
