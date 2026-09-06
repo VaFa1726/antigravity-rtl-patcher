@@ -1,5 +1,5 @@
 /**
- * AGY RTL Engine v2.0.0
+ * AGY RTL Engine v2.1.0
  * Intelligent RTL detection & styling for Antigravity
  *
  * This script runs inside the Electron renderer process.
@@ -457,5 +457,5 @@
     setTimeout(init, 500);
   }
 
-  console.log('%c🌌 AGY RTL Engine v2.0.0 loaded', 'color: cyan; font-weight: bold;');
+  console.log('%c🌌 AGY RTL Engine v2.1.0 loaded', 'color: cyan; font-weight: bold;');
 })();
