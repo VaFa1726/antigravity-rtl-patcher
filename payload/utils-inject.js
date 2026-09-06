@@ -60,7 +60,7 @@ win.webContents.on('dom-ready', () => {
                         text-align: left !important;
                     }
                     
-                    /* RTL only for message/chat content area */
+                    /* RTL for message/chat content area */
                     body.rtl-active [class*="message"] p,
                     body.rtl-active [class*="message"] h1, 
                     body.rtl-active [class*="message"] h2, 
@@ -97,6 +97,24 @@ win.webContents.on('dom-ready', () => {
                         text-align: right !important;
                     }
                     
+                    /* RTL for tables */
+                    body.rtl-active table,
+                    body.rtl-active td,
+                    body.rtl-active th {
+                        direction: rtl !important;
+                        text-align: right !important;
+                    }
+                    
+                    /* RTL for code blocks (bash, etc) */
+                    body.rtl-active pre,
+                    body.rtl-active code,
+                    body.rtl-active pre *,
+                    body.rtl-active code * {
+                        direction: rtl !important;
+                        text-align: right !important;
+                        font-family: 'Courier New', Consolas, Monaco, monospace !important;
+                    }
+                    
                     /* Lists */
                     body.rtl-active [class*="message"] ul,
                     body.rtl-active [class*="message"] ol,
@@ -108,16 +126,6 @@ win.webContents.on('dom-ready', () => {
                     body.rtl-active main ol {
                         padding-left: 0 !important;
                         padding-right: 2rem !important;
-                    }
-                    
-                    /* Code blocks always LTR */
-                    body.rtl-active pre,
-                    body.rtl-active code,
-                    body.rtl-active pre *,
-                    body.rtl-active code * {
-                        direction: ltr !important;
-                        text-align: left !important;
-                        font-family: 'Courier New', Consolas, Monaco, monospace !important;
                     }
                     
                     /* Keep UI elements LTR */
