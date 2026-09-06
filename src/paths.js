@@ -3,7 +3,7 @@ const path = require('path');
 const os = require('os');
 
 /**
- * Known installation paths for Antigravity IDE across all platforms.
+ * Known installation paths for Antigravity across all platforms.
  * Both the IDE (unpacked) and the standalone app (asar) are supported.
  */
 function getSearchPaths() {
@@ -11,37 +11,52 @@ function getSearchPaths() {
   const platform = os.platform();
 
   const common = [
-    // Downloads (common for manual installs)
-    path.join(home, 'Downloads', 'Antigravity-IDE'),
-    path.join(home, 'Downloads', 'Antigravity-x64'),
+    // Antigravity (primary target)
     path.join(home, 'Downloads', 'Antigravity'),
-    // Desktop
-    path.join(home, 'Desktop', 'Antigravity-IDE'),
+    path.join(home, 'Downloads', 'Antigravity-x64'),
+    path.join(home, 'Desktop', 'Antigravity'),
     path.join(home, 'Desktop', 'Antigravity-x64'),
+    // Antigravity IDE (backward compatibility)
+    path.join(home, 'Downloads', 'Antigravity-IDE'),
+    path.join(home, 'Desktop', 'Antigravity-IDE'),
   ];
 
   const platformPaths = {
     linux: [
-      ...common,
+      // Antigravity (primary)
+      '/opt/antigravity',
+      '/opt/Antigravity',
+      '/usr/lib/antigravity',
+      '/usr/share/antigravity',
+      path.join(home, '.local', 'share', 'antigravity'),
+      path.join(home, '.local', 'lib', 'antigravity'),
+      // Antigravity IDE (fallback)
       '/opt/antigravity-ide',
       '/opt/Antigravity-IDE',
-      '/opt/antigravity',
       '/usr/lib/antigravity-ide',
       '/usr/share/antigravity-ide',
       path.join(home, '.local', 'share', 'antigravity-ide'),
       path.join(home, '.local', 'lib', 'antigravity-ide'),
+      ...common,
     ],
     darwin: [
+      // Antigravity (primary)
+      '/Applications/Antigravity.app/Contents',
+      path.join(home, 'Applications', 'Antigravity.app', 'Contents'),
+      // Antigravity IDE (fallback)
       '/Applications/Antigravity IDE.app/Contents',
       path.join(home, 'Applications', 'Antigravity IDE.app', 'Contents'),
-      '/Applications/Antigravity.app/Contents',
       ...common,
     ],
     win32: [
+      // Antigravity (primary)
+      path.join(process.env.LOCALAPPDATA || '', 'Programs', 'antigravity'),
+      path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Antigravity'),
+      path.join(process.env.PROGRAMFILES || '', 'Antigravity'),
+      // Antigravity IDE (fallback)
       path.join(process.env.LOCALAPPDATA || '', 'Programs', 'antigravity-ide'),
       path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Antigravity IDE'),
       path.join(process.env.PROGRAMFILES || '', 'Antigravity IDE'),
-      path.join(process.env.LOCALAPPDATA || '', 'Programs', 'antigravity'),
       ...common,
     ],
   };
@@ -85,7 +100,7 @@ function detectInstallation(basePath) {
 }
 
 /**
- * Find all Antigravity IDE installations on the system.
+ * Find all Antigravity installations on the system.
  */
 function findInstallations(customPath) {
   const results = [];

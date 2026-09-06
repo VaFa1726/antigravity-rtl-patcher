@@ -1,7 +1,7 @@
 {
   "name": "antigravity-rtl-patcher",
   "version": "2.0.0",
-  "description": "🌌 Intelligent RTL & Persian/Arabic typography patcher for Antigravity IDE",
+  "description": "🌌 Intelligent RTL & Persian/Arabic typography patcher for Antigravity",
   "main": "src/patcher.js",
   "bin": {
     "antigravity-rtl-patcher": "./bin/cli.js",
@@ -22,8 +22,6 @@
     "patcher",
     "electron",
     "asar",
-    "ide",
-    "vscode",
     "right-to-left",
     "bidirectional"
   ],

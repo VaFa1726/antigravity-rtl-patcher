@@ -13,7 +13,7 @@ const ENGINE_FILENAME = 'agy-rtl-engine.js';
 const STYLES_FILENAME = 'agy-rtl-styles.css';
 
 /**
- * Patch an unpacked Antigravity IDE installation.
+ * Patch an unpacked Antigravity installation.
  * Copies payload files and modifies workbench.html.
  */
 async function patchUnpacked(installation, spinner) {
@@ -166,14 +166,14 @@ async function patchAsar(installation, spinner) {
  * Main patch function.
  */
 async function patch(customPath) {
-  const spinner = ora('Searching for Antigravity IDE...').start();
+  const spinner = ora('Searching for Antigravity...').start();
 
   const installations = findInstallations(customPath);
 
   if (installations.length === 0) {
-    spinner.fail('Antigravity IDE installation not found.');
+    spinner.fail('Antigravity installation not found.');
     console.error(chalk.yellow('\nTry specifying the path manually:'));
-    console.error(chalk.cyan('  agy-rtl patch --path /path/to/Antigravity-IDE\n'));
+    console.error(chalk.cyan('  agy-rtl patch --path /path/to/Antigravity\n'));
     throw new Error('Installation not found.');
   }
 
@@ -192,8 +192,8 @@ async function patch(customPath) {
     }
   }
 
-  console.log(chalk.green.bold('\n✨ Antigravity IDE successfully patched with RTL support!'));
-  console.log(chalk.cyan('   Please restart Antigravity IDE for changes to take effect.\n'));
+  console.log(chalk.green.bold('\n✨ Antigravity successfully patched with RTL support!'));
+  console.log(chalk.cyan('   Please restart Antigravity for changes to take effect.\n'));
 }
 
 /**
@@ -242,11 +242,11 @@ async function restoreAsar(installation, spinner) {
  * Main restore function.
  */
 async function restore(customPath) {
-  const spinner = ora('Searching for Antigravity IDE...').start();
+  const spinner = ora('Searching for Antigravity...').start();
   const installations = findInstallations(customPath);
 
   if (installations.length === 0) {
-    spinner.fail('Antigravity IDE installation not found.');
+    spinner.fail('Antigravity installation not found.');
     throw new Error('Installation not found.');
   }
 
@@ -264,19 +264,19 @@ async function restore(customPath) {
     }
   }
 
-  console.log(chalk.green.bold('\n✨ Antigravity IDE restored to original state!'));
-  console.log(chalk.cyan('   Please restart Antigravity IDE for changes to take effect.\n'));
+  console.log(chalk.green.bold('\n✨ Antigravity restored to original state!'));
+  console.log(chalk.cyan('   Please restart Antigravity for changes to take effect.\n'));
 }
 
 /**
  * Check patch status.
  */
 async function status(customPath) {
-  const spinner = ora('Searching for Antigravity IDE...').start();
+  const spinner = ora('Searching for Antigravity...').start();
   const installations = findInstallations(customPath);
 
   if (installations.length === 0) {
-    spinner.fail('Antigravity IDE installation not found.');
+    spinner.fail('Antigravity installation not found.');
     return;
   }
 

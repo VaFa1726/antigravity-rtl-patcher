@@ -1,12 +1,13 @@
 /*
  * AGY RTL Styles v2.0.0
- * Typography & RTL fixes for Antigravity IDE
+ * Typography & RTL fixes + Toggle Panel for Antigravity
  */
 
 /* Vazirmatn — Modern Persian/Arabic font from Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap');
 
-/* RTL text styling */
+/* ─── RTL Text Styling ───────────────────────────────────── */
+
 [data-agy-rtl="true"] {
   font-family: 'Vazirmatn', system-ui, -apple-system, 'Segoe UI', sans-serif !important;
   line-height: 1.85 !important;
@@ -34,4 +35,200 @@
 /* Fix list markers in RTL */
 [data-agy-rtl="true"] li {
   list-style-position: inside;
+}
+
+/* ─── Status Bar Icon ────────────────────────────────────── */
+
+.agy-rtl-status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 28px;
+  height: 22px;
+  cursor: pointer;
+  color: var(--vscode-statusBar-foreground, #ccc);
+  opacity: 0.85;
+  transition: opacity 0.2s ease, color 0.2s ease;
+  vertical-align: middle;
+  border-radius: 3px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.agy-rtl-status-icon:hover {
+  opacity: 1;
+  color: var(--vscode-statusBarItem-hoverForeground, #fff);
+  background: var(--vscode-statusBarItem-hoverBackground, rgba(255,255,255,0.12));
+}
+
+/* Fixed position fallback when status bar not found */
+.agy-rtl-status-icon.agy-rtl-fixed {
+  position: fixed;
+  bottom: 0;
+  right: 100px;
+  z-index: 99999;
+  width: 32px;
+  height: 22px;
+  background: var(--vscode-statusBar-background, #007acc);
+}
+
+/* Status dot indicator */
+.agy-rtl-status-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #666;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.agy-rtl-status-dot.active {
+  background: #4caf50;
+  box-shadow: 0 0 4px rgba(76, 175, 80, 0.6);
+}
+
+/* ─── Toggle Panel ───────────────────────────────────────── */
+
+.agy-rtl-panel {
+  position: fixed;
+  z-index: 100000;
+  min-width: 260px;
+  max-width: 300px;
+  background: var(--vscode-editorWidget-background, #252526);
+  border: 1px solid var(--vscode-editorWidget-border, #454545);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.2);
+  padding: 16px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px) scale(0.96);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+  font-family: -apple-system, 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--vscode-foreground, #ccc);
+}
+
+.agy-rtl-panel.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+/* ── Panel Header ── */
+
+.agy-rtl-panel-header {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--vscode-editorWidget-border, #3a3a3a);
+}
+
+.agy-rtl-panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vscode-foreground, #e0e0e0);
+  letter-spacing: -0.01em;
+}
+
+/* ── Panel Row ── */
+
+.agy-rtl-panel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.agy-rtl-panel-label {
+  font-size: 13px;
+  color: var(--vscode-foreground, #ccc);
+}
+
+/* ── Separator ── */
+
+.agy-rtl-panel-sep {
+  height: 1px;
+  background: var(--vscode-editorWidget-border, #3a3a3a);
+  margin: 8px 0;
+}
+
+/* ── Toggle Switch ── */
+
+.agy-rtl-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.agy-rtl-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.agy-rtl-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #555;
+  border-radius: 22px;
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.agy-rtl-slider::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 3px;
+  bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.25s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.agy-rtl-switch input:checked + .agy-rtl-slider {
+  background: #4b9cf5;
+  box-shadow: 0 0 8px rgba(75, 156, 245, 0.3);
+}
+
+.agy-rtl-switch input:checked + .agy-rtl-slider::before {
+  transform: translateX(18px);
+}
+
+.agy-rtl-switch input:focus-visible + .agy-rtl-slider {
+  outline: 2px solid var(--vscode-focusBorder, #007fd4);
+  outline-offset: 2px;
+}
+
+/* ── GitHub Link ── */
+
+.agy-rtl-panel-gh {
+  justify-content: center;
+  padding-top: 4px;
+}
+
+.agy-rtl-gh-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--vscode-textLink-foreground, #9cdcfe);
+  text-decoration: none;
+  font-size: 12px;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.agy-rtl-gh-link:hover {
+  opacity: 1;
+  text-decoration: underline;
 }
