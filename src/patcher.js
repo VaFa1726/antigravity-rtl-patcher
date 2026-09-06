@@ -6,6 +6,7 @@ const ora = require('ora');
 const chalk = require('chalk');
 const { findInstallations } = require('./paths');
 const { checkPermissions, delay } = require('./utils');
+const { checkForUpdates } = require('./version-checker');
 
 const PATCH_MARKER = '__AGY_RTL_INJECTED__';
 const BACKUP_SUFFIX = '.agy-rtl-backup';
@@ -151,7 +152,12 @@ async function restoreAsar(installation, spinner) {
 /**
  * Main patch function.
  */
-async function patch(customPath) {
+async function patch(customPath, skipUpdateCheck = false) {
+  // Check for updates (non-blocking)
+  if (!skipUpdateCheck) {
+    await checkForUpdates(false);
+  }
+
   const spinner = ora('Searching for Antigravity...').start();
   const installations = findInstallations(customPath);
 
