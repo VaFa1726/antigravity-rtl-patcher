@@ -223,8 +223,8 @@ function _agyRtlRendererMain() {
   // ─── Helpers ─────────────────────────────────────────────
 
   function getStoredState() {
-    try { var s = localStorage.getItem(STORAGE_KEY); return s === null ? true : s === 'true'; }
-    catch (e) { return true; }
+    try { var s = localStorage.getItem(STORAGE_KEY); return s === null ? false : s === 'true'; }
+    catch (e) { return false; }
   }
   function setStoredState(v) {
     try { localStorage.setItem(STORAGE_KEY, v ? 'true' : 'false'); } catch (e) {}
@@ -241,14 +241,18 @@ function _agyRtlRendererMain() {
     if (el.getAttribute(PROCESSED_ATTR)) return;
     // Skip the RTL panel/icon itself
     if (el.closest && (el.closest('#' + PANEL_ID) || el.closest('#' + STATUS_ICON_ID))) return;
-    var text = el.textContent || '';
-    if (text.trim().length > 0 && isRTL(text)) {
+    var directText = Array.from(el.childNodes)
+        .filter(n => n.nodeType === Node.TEXT_NODE)
+        .map(n => n.textContent)
+        .join(' ');
+    if (directText.trim().length > 0 && isRTL(directText)) {
       el.setAttribute(PROCESSED_ATTR, 'true');
     }
   }
   function removeRTL(el) {
     if (el.getAttribute(PROCESSED_ATTR)) {
       el.removeAttribute(PROCESSED_ATTR);
+      el.removeAttribute('dir'); // Ensure dir is cleaned up if it was left over from older versions
     }
   }
 
@@ -256,7 +260,7 @@ function _agyRtlRendererMain() {
   var SELECTORS = [
     'p', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
     'blockquote', 'td', 'th', 'span', 'a', 'label',
-    'div', 'button',
+    'button',
   ].join(',');
 
   function scanElement(root) {

@@ -75,6 +75,19 @@ async function patchAsar(installation, spinner) {
     asar.extractAll(asarPath, tmpDir);
     spinner.succeed('Extracted successfully.');
 
+    // 2.5 Check if it's the IDE
+    const pkgJsonPath = path.join(tmpDir, 'package.json');
+    if (fs.existsSync(pkgJsonPath)) {
+      try {
+        const pkg = JSON.parse(await fs.readFile(pkgJsonPath, 'utf-8'));
+        if (pkg.name && (pkg.name.toLowerCase().includes('ide') || pkg.name.toLowerCase().includes('antigravity-ide'))) {
+          spinner.warn('Antigravity IDE detected. Skipping (this patcher is only for the main app).');
+          await fs.remove(tmpDir);
+          return;
+        }
+      } catch (e) {}
+    }
+
     // 3. Find preload.js
     spinner.start('Searching for preload.js...');
     const preloadPath = findPreloadJs(tmpDir);
