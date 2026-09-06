@@ -97,26 +97,25 @@ win.webContents.on('dom-ready', () => {
                 }, 500);
                 
                 const CSS = \`
-                    /* Vazirmatn Font from CDN */
-                    @import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
-                    
-                    /* Apply Vazirmatn to all text when RTL is active */
+                    /* Persian/Arabic Font Stack */
                     body.rtl-active {
-                        font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
+                        font-family: 'Segoe UI', Tahoma, Arial, 'Helvetica Neue', sans-serif !important;
+                        font-feature-settings: 'liga' 1, 'calt' 1 !important;
+                        text-rendering: optimizeLegibility !important;
+                        -webkit-font-smoothing: antialiased !important;
                     }
                     
                     /* RTL Styles - Only for message content */
                     body.rtl-active [dir="rtl"] {
                         direction: rtl !important;
                         text-align: right !important;
-                        unicode-bidi: isolate !important;
                     }
                     
                     /* Keep paragraphs and headings with proper bidi */
                     body.rtl-active p,
                     body.rtl-active h1, body.rtl-active h2, body.rtl-active h3,
                     body.rtl-active h4, body.rtl-active h5, body.rtl-active h6 {
-                        unicode-bidi: plaintext !important;
+                        direction: inherit !important;
                         text-align: start !important;
                     }
                     
@@ -134,7 +133,6 @@ win.webContents.on('dom-ready', () => {
                     body.rtl-active code * {
                         direction: ltr !important;
                         text-align: left !important;
-                        unicode-bidi: isolate !important;
                         font-family: 'Courier New', Consolas, Monaco, monospace !important;
                     }
                     
