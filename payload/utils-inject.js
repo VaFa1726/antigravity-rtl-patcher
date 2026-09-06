@@ -13,9 +13,7 @@ win.webContents.on('console-message', (event, ...args) => {
             const configData = message.substring(16);
             const configPath = require('path').join(require('os').homedir(), '.antigravity-rtl.json');
             require('fs').writeFileSync(configPath, configData, 'utf8');
-        } catch (err) {
-            console.error('[RTL] Config save failed:', err);
-        }
+        } catch (err) {}
     }
 });
 
@@ -38,52 +36,199 @@ win.webContents.on('dom-ready', () => {
                 window.__RTL_LOADED__ = true;
                 
                 let rtlEnabled = ${rtlConfig.enabled};
+                let panelVisible = false;
                 
                 const CSS = \`
-                    p, h1, h2, h3, h4, h5, h6, ul, ol, li, div, span {
-                        unicode-bidi: plaintext;
-                        text-align: start;
+                    /* RTL Styles */
+                    body.rtl-active p, 
+                    body.rtl-active h1, body.rtl-active h2, body.rtl-active h3, 
+                    body.rtl-active h4, body.rtl-active h5, body.rtl-active h6,
+                    body.rtl-active ul, body.rtl-active ol, body.rtl-active li,
+                    body.rtl-active div:not(#rtl-panel):not(.rtl-ui), 
+                    body.rtl-active span:not(.rtl-ui) {
+                        direction: rtl !important;
+                        text-align: right !important;
+                        unicode-bidi: plaintext !important;
                     }
                     
-                    [dir="rtl"] ul, [dir="rtl"] ol {
+                    body.rtl-active [dir="rtl"] ul, 
+                    body.rtl-active [dir="rtl"] ol {
                         padding-left: 0 !important;
                         padding-right: 1.5rem !important;
                     }
                     
-                    pre, code, pre *, code * {
-                        unicode-bidi: isolate !important;
+                    body.rtl-active pre, 
+                    body.rtl-active code, 
+                    body.rtl-active pre *, 
+                    body.rtl-active code * {
                         direction: ltr !important;
                         text-align: left !important;
+                        unicode-bidi: isolate !important;
                     }
                     
-                    #rtl-toggle-btn {
+                    /* Panel Container */
+                    #rtl-trigger {
                         position: fixed;
                         bottom: 20px;
                         right: 20px;
-                        z-index: 999999;
+                        z-index: 999998;
                         width: 50px;
                         height: 50px;
                         border-radius: 50%;
-                        background: rgba(60, 60, 60, 0.9);
-                        border: 2px solid rgba(100, 100, 100, 0.5);
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        border: none;
                         color: white;
                         cursor: pointer;
                         display: flex;
                         align-items: center;
                         justify-content: center;
                         font-size: 24px;
-                        transition: all 0.3s;
-                        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
                     }
                     
-                    #rtl-toggle-btn:hover {
-                        background: rgba(80, 80, 80, 0.95);
-                        transform: scale(1.1);
+                    #rtl-trigger:hover {
+                        transform: scale(1.1) rotate(180deg);
+                        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
                     }
                     
-                    #rtl-toggle-btn.active {
-                        background: rgba(70, 130, 180, 0.9);
-                        border-color: rgba(70, 130, 180, 0.8);
+                    #rtl-trigger.active {
+                        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                        box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+                    }
+                    
+                    #rtl-panel {
+                        position: fixed;
+                        bottom: 80px;
+                        right: 20px;
+                        z-index: 999999;
+                        width: 300px;
+                        background: rgba(255, 255, 255, 0.95);
+                        backdrop-filter: blur(10px);
+                        border-radius: 16px;
+                        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+                        opacity: 0;
+                        transform: translateY(20px) scale(0.9);
+                        pointer-events: none;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        overflow: hidden;
+                    }
+                    
+                    #rtl-panel.visible {
+                        opacity: 1;
+                        transform: translateY(0) scale(1);
+                        pointer-events: auto;
+                    }
+                    
+                    @media (prefers-color-scheme: dark) {
+                        #rtl-panel {
+                            background: rgba(30, 30, 40, 0.95);
+                            color: #e0e0e0;
+                        }
+                    }
+                    
+                    .rtl-panel-header {
+                        padding: 20px;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        text-align: center;
+                        font-weight: 600;
+                        font-size: 16px;
+                    }
+                    
+                    .rtl-panel-body {
+                        padding: 24px;
+                    }
+                    
+                    .rtl-row {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        margin-bottom: 16px;
+                    }
+                    
+                    .rtl-label {
+                        font-size: 14px;
+                        font-weight: 500;
+                        color: #333;
+                    }
+                    
+                    @media (prefers-color-scheme: dark) {
+                        .rtl-label {
+                            color: #e0e0e0;
+                        }
+                    }
+                    
+                    /* Toggle Switch */
+                    .rtl-switch {
+                        position: relative;
+                        width: 52px;
+                        height: 28px;
+                        background: #ddd;
+                        border-radius: 14px;
+                        cursor: pointer;
+                        transition: background 0.3s;
+                    }
+                    
+                    .rtl-switch.active {
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    }
+                    
+                    .rtl-switch::after {
+                        content: '';
+                        position: absolute;
+                        width: 22px;
+                        height: 22px;
+                        background: white;
+                        border-radius: 50%;
+                        top: 3px;
+                        left: 3px;
+                        transition: transform 0.3s;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                    }
+                    
+                    .rtl-switch.active::after {
+                        transform: translateX(24px);
+                    }
+                    
+                    .rtl-panel-footer {
+                        padding: 16px 24px;
+                        border-top: 1px solid rgba(0, 0, 0, 0.1);
+                        display: flex;
+                        justify-content: center;
+                    }
+                    
+                    @media (prefers-color-scheme: dark) {
+                        .rtl-panel-footer {
+                            border-top: 1px solid rgba(255, 255, 255, 0.1);
+                        }
+                    }
+                    
+                    .rtl-github-btn {
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        padding: 10px 20px;
+                        background: #24292e;
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-size: 13px;
+                        font-weight: 500;
+                        text-decoration: none;
+                        transition: all 0.2s;
+                    }
+                    
+                    .rtl-github-btn:hover {
+                        background: #1a1f23;
+                        transform: translateY(-2px);
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                    }
+                    
+                    .rtl-github-icon {
+                        width: 18px;
+                        height: 18px;
                     }
                 \`;
                 
@@ -92,96 +237,81 @@ win.webContents.on('dom-ready', () => {
                 styleEl.textContent = CSS;
                 document.head.appendChild(styleEl);
                 
-                function detectRTL(text) {
-                    if (!text || text.trim().length === 0) return false;
-                    const cleaned = text.replace(/[\\u200B-\\u200F\\uFEFF]/g, '').trim();
-                    if (cleaned.length === 0) return false;
-                    
-                    const firstChar = cleaned.match(/[A-Za-z\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF]/);
-                    if (!firstChar) return false;
-                    
-                    return /[\\u0600-\\u06FF\\u0750-\\u077F\\u08A0-\\u08FF\\uFB50-\\uFDFF\\uFE70-\\uFEFF]/.test(firstChar[0]);
+                // Apply RTL class if enabled
+                if (rtlEnabled) {
+                    document.body.classList.add('rtl-active');
                 }
                 
-                function updateDirections() {
-                    if (!rtlEnabled) return;
-                    
-                    document.querySelectorAll('[contenteditable="true"], [contenteditable="true"] p, textarea').forEach(el => {
-                        const text = el.tagName === 'TEXTAREA' ? el.value : el.textContent;
-                        const cleaned = text.replace(/[\\u200B-\\u200F\\uFEFF]/g, '').trim();
-                        
-                        if (cleaned.length > 0) {
-                            const dir = detectRTL(cleaned) ? 'rtl' : 'ltr';
-                            if (el.getAttribute('dir') !== dir) {
-                                el.setAttribute('dir', dir);
-                            }
-                        } else {
-                            if (el.hasAttribute('dir')) el.removeAttribute('dir');
-                        }
-                    });
-                    
-                    document.querySelectorAll('.prose > *, [data-testid="chat-message"] > *, .markdown-body > *, .leading-relaxed > *').forEach(el => {
-                        if (el.tagName === 'PRE' || el.tagName === 'CODE') return;
-                        
-                        const text = el.textContent.replace(/[\\u200B-\\u200F\\uFEFF]/g, '').trim();
-                        if (text) {
-                            const dir = detectRTL(text) ? 'rtl' : 'ltr';
-                            if (el.getAttribute('dir') !== dir) {
-                                el.setAttribute('dir', dir);
-                            }
-                        }
-                    });
-                }
+                // Create UI
+                const trigger = document.createElement('button');
+                trigger.id = 'rtl-trigger';
+                trigger.className = rtlEnabled ? 'active rtl-ui' : 'rtl-ui';
+                trigger.innerHTML = '⇄';
+                trigger.title = 'RTL Settings';
                 
-                document.body.addEventListener('input', updateDirections, { capture: true });
-                const observer = new MutationObserver(updateDirections);
-                observer.observe(document.body, { childList: true, subtree: true });
-                setInterval(updateDirections, 500);
+                const panel = document.createElement('div');
+                panel.id = 'rtl-panel';
+                panel.className = 'rtl-ui';
+                panel.innerHTML = \`
+                    <div class="rtl-panel-header rtl-ui">
+                        Antigravity Smart RTL
+                    </div>
+                    <div class="rtl-panel-body rtl-ui">
+                        <div class="rtl-row rtl-ui">
+                            <span class="rtl-label rtl-ui">RTL Mode</span>
+                            <div class="rtl-switch \${rtlEnabled ? 'active' : ''} rtl-ui" id="rtl-toggle"></div>
+                        </div>
+                    </div>
+                    <div class="rtl-panel-footer rtl-ui">
+                        <a href="https://github.com/VaFa1726/antigravity-rtl-patcher" target="_blank" class="rtl-github-btn rtl-ui">
+                            <svg class="rtl-github-icon rtl-ui" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                            </svg>
+                            Star on GitHub
+                        </a>
+                    </div>
+                \`;
                 
-                document.addEventListener('keydown', (e) => {
-                    if (e.altKey && e.code === 'KeyR') {
-                        e.preventDefault();
-                        toggleRTL();
+                document.body.appendChild(trigger);
+                document.body.appendChild(panel);
+                
+                // Event handlers
+                trigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    panelVisible = !panelVisible;
+                    panel.classList.toggle('visible', panelVisible);
+                });
+                
+                document.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('rtl-ui')) {
+                        panelVisible = false;
+                        panel.classList.remove('visible');
                     }
-                }, { capture: true });
+                });
                 
-                const btn = document.createElement('button');
-                btn.id = 'rtl-toggle-btn';
-                btn.className = rtlEnabled ? 'active' : '';
-                btn.innerHTML = '⇄';
-                btn.title = 'Toggle RTL (Alt+R)';
-                
-                btn.addEventListener('click', toggleRTL);
-                
-                function toggleRTL() {
+                document.getElementById('rtl-toggle').addEventListener('click', () => {
                     rtlEnabled = !rtlEnabled;
                     
+                    const toggle = document.getElementById('rtl-toggle');
+                    toggle.classList.toggle('active', rtlEnabled);
+                    trigger.classList.toggle('active', rtlEnabled);
+                    
                     if (rtlEnabled) {
-                        btn.classList.add('active');
-                        if (!document.getElementById('rtl-main-style')) {
-                            document.head.appendChild(styleEl);
-                        }
-                        updateDirections();
+                        document.body.classList.add('rtl-active');
                     } else {
-                        btn.classList.remove('active');
-                        if (styleEl.parentNode) {
-                            styleEl.parentNode.removeChild(styleEl);
-                        }
-                        document.querySelectorAll('[dir]').forEach(el => {
-                            if (!el.closest('#rtl-toggle-btn')) {
-                                el.removeAttribute('dir');
-                            }
-                        });
+                        document.body.classList.remove('rtl-active');
                     }
                     
                     console.log('RTL_CONFIG_SAVE:' + JSON.stringify({ enabled: rtlEnabled }));
-                }
+                });
                 
-                document.body.appendChild(btn);
-                
-                if (rtlEnabled) {
-                    updateDirections();
-                }
+                // Keyboard shortcut
+                document.addEventListener('keydown', (e) => {
+                    if (e.altKey && e.code === 'KeyR') {
+                        e.preventDefault();
+                        document.getElementById('rtl-toggle').click();
+                    }
+                });
             })();
         `).catch(err => console.error('[RTL] Injection failed:', err));
         
