@@ -38,32 +38,109 @@ win.webContents.on('dom-ready', () => {
                 let rtlEnabled = ${rtlConfig.enabled};
                 let panelVisible = false;
                 
+                // RTL Detection Function
+                function isRTLText(text) {
+                    if (!text || typeof text !== 'string') return false;
+                    const rtlChars = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+                    const cleanText = text.trim();
+                    if (cleanText.length === 0) return false;
+                    
+                    // Check first non-whitespace character
+                    for (let char of cleanText) {
+                        if (char.trim()) {
+                            return rtlChars.test(char);
+                        }
+                    }
+                    return false;
+                }
+                
+                // Apply RTL to text elements dynamically
+                function applyRTLToContent() {
+                    if (!rtlEnabled) return;
+                    
+                    // Target message containers and paragraphs
+                    const textElements = document.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote, td, th');
+                    
+                    textElements.forEach(el => {
+                        // Skip if already processed or is UI element
+                        if (el.classList.contains('rtl-ui') || el.classList.contains('rtl-processed')) return;
+                        
+                        // Skip code blocks
+                        if (el.closest('pre, code')) return;
+                        
+                        const text = el.textContent;
+                        if (isRTLText(text)) {
+                            el.setAttribute('dir', 'rtl');
+                            el.classList.add('rtl-processed');
+                        } else if (el.hasAttribute('dir') && el.getAttribute('dir') === 'rtl') {
+                            el.removeAttribute('dir');
+                            el.classList.remove('rtl-processed');
+                        }
+                    });
+                }
+                
+                // Observe DOM changes
+                const observer = new MutationObserver((mutations) => {
+                    if (rtlEnabled) {
+                        applyRTLToContent();
+                    }
+                });
+                
+                // Start observing after a short delay
+                setTimeout(() => {
+                    observer.observe(document.body, {
+                        childList: true,
+                        subtree: true,
+                        characterData: true
+                    });
+                    applyRTLToContent();
+                }, 500);
+                
                 const CSS = \`
-                    /* RTL Styles */
-                    body.rtl-active p, 
-                    body.rtl-active h1, body.rtl-active h2, body.rtl-active h3, 
-                    body.rtl-active h4, body.rtl-active h5, body.rtl-active h6,
-                    body.rtl-active ul, body.rtl-active ol, body.rtl-active li,
-                    body.rtl-active div:not(#rtl-panel):not(.rtl-ui), 
-                    body.rtl-active span:not(.rtl-ui) {
+                    /* Vazirmatn Font */
+                    @font-face {
+                        font-family: 'Vazirmatn';
+                        src: url('./Vazirmatn-Variable.woff2') format('woff2');
+                        font-weight: 100 900;
+                        font-display: swap;
+                    }
+                    
+                    /* Apply Vazirmatn to all text when RTL is active */
+                    body.rtl-active {
+                        font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
+                    }
+                    
+                    /* RTL Styles - Only for message content */
+                    body.rtl-active [dir="rtl"] {
                         direction: rtl !important;
                         text-align: right !important;
-                        unicode-bidi: plaintext !important;
+                        unicode-bidi: isolate !important;
                     }
                     
-                    body.rtl-active [dir="rtl"] ul, 
+                    /* Keep paragraphs and headings with proper bidi */
+                    body.rtl-active p,
+                    body.rtl-active h1, body.rtl-active h2, body.rtl-active h3,
+                    body.rtl-active h4, body.rtl-active h5, body.rtl-active h6 {
+                        unicode-bidi: plaintext !important;
+                        text-align: start !important;
+                    }
+                    
+                    /* Lists in RTL context */
+                    body.rtl-active [dir="rtl"] ul,
                     body.rtl-active [dir="rtl"] ol {
                         padding-left: 0 !important;
-                        padding-right: 1.5rem !important;
+                        padding-right: 2rem !important;
                     }
                     
-                    body.rtl-active pre, 
-                    body.rtl-active code, 
-                    body.rtl-active pre *, 
+                    /* Code blocks always LTR */
+                    body.rtl-active pre,
+                    body.rtl-active code,
+                    body.rtl-active pre *,
                     body.rtl-active code * {
                         direction: ltr !important;
                         text-align: left !important;
                         unicode-bidi: isolate !important;
+                        font-family: 'Courier New', Consolas, Monaco, monospace !important;
                     }
                     
                     /* Panel Container */
@@ -298,8 +375,14 @@ win.webContents.on('dom-ready', () => {
                     
                     if (rtlEnabled) {
                         document.body.classList.add('rtl-active');
+                        applyRTLToContent();
                     } else {
                         document.body.classList.remove('rtl-active');
+                        // Remove all dir attributes when disabled
+                        document.querySelectorAll('[dir="rtl"].rtl-processed').forEach(el => {
+                            el.removeAttribute('dir');
+                            el.classList.remove('rtl-processed');
+                        });
                     }
                     
                     console.log('RTL_CONFIG_SAVE:' + JSON.stringify({ enabled: rtlEnabled }));
