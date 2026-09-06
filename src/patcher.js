@@ -8,7 +8,7 @@ const { findInstallations, findUtilsJs } = require('./paths');
 const { checkPermissions, delay } = require('./utils');
 const { checkForUpdates } = require('./version-checker');
 
-const PATCH_MARKER = '/* ANTIGRAVITY_RTL_PATCH_v3 */';
+const PATCH_MARKER = '/* ANTIGRAVITY_RTL_PATCH_v1 */';
 const BACKUP_SUFFIX = '.agy-rtl-backup';
 const INJECTION_ANCHOR = 'void win.loadURL(url);';
 
@@ -33,7 +33,7 @@ async function isAlreadyPatched(extractDir) {
 async function patchAsar(installation, spinner) {
   const { asarPath } = installation;
   const backupPath = asarPath + BACKUP_SUFFIX;
-  const tmpDir = path.join(os.tmpdir(), 'agy-rtl-v3-' + Date.now());
+  const tmpDir = path.join(os.tmpdir(), 'agy-rtl-' + Date.now());
 
   try {
     // 1. Backup
@@ -53,7 +53,7 @@ async function patchAsar(installation, spinner) {
 
     // 3. Check if already patched
     if (await isAlreadyPatched(tmpDir)) {
-      spinner.info('Already patched with v3.0!');
+      spinner.info('Already patched with latest version!');
       await fs.remove(tmpDir);
       return;
     }
@@ -165,8 +165,8 @@ async function patch(customPath, skipUpdateCheck = false) {
     await patchAsar(inst, ora());
   }
 
-  console.log(chalk.green.bold('\n  ✨ Antigravity patched with RTL v3.0!'));
-  console.log(chalk.cyan('  Restart Antigravity to see the enhanced RTL features.\n'));
+  console.log(chalk.green.bold('\n  ✨ Antigravity patched successfully!'));
+  console.log(chalk.cyan('  Restart Antigravity and press Alt + R to toggle RTL mode.\n'));
 }
 
 /**

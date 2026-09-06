@@ -62,7 +62,7 @@ function showBanner() {
     });
     
     console.log('');
-    console.log(chalk.gray(`  Advanced RTL & Typography Control | v${currentVersion}\n`));
+    console.log(chalk.gray(`  RTL Support for Persian/Arabic Text | v${currentVersion}\n`));
   } catch (err) {
     // Fallback banner
     console.log(chalk.cyan.bold(`\n✨ Antigravity Smart RTL Patcher v${currentVersion}\n`));
@@ -75,12 +75,12 @@ showBanner();
 // CLI setup
 program
   .name('agy-rtl')
-  .description('Advanced RTL patcher for Antigravity')
+  .description('RTL patcher for Antigravity')
   .version(currentVersion);
 
 program
   .command('patch')
-  .description('Inject advanced RTL support into Antigravity')
+  .description('Apply RTL patch to Antigravity')
   .option('-p, --path <path>', 'Custom path to Antigravity installation')
   .option('--skip-update-check', 'Skip checking for updates')
   .action(async (options) => {
@@ -94,7 +94,7 @@ program
 
 program
   .command('restore')
-  .description('Remove RTL patch and restore original Antigravity')
+  .description('Restore original Antigravity (remove patch)')
   .option('-p, --path <path>', 'Custom path to Antigravity installation')
   .action(async (options) => {
     try {
