@@ -146,7 +146,7 @@ win.webContents.on('dom-ready', () => {
                         width: 50px;
                         height: 50px;
                         border-radius: 50%;
-                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
                         border: none;
                         color: white;
                         cursor: pointer;
@@ -155,17 +155,18 @@ win.webContents.on('dom-ready', () => {
                         justify-content: center;
                         font-size: 24px;
                         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
                     }
                     
                     #rtl-trigger:hover {
                         transform: scale(1.1) rotate(180deg);
-                        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+                        background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+                        box-shadow: 0 6px 20px rgba(49, 130, 206, 0.4);
                     }
                     
                     #rtl-trigger.active {
-                        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-                        box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+                        background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+                        box-shadow: 0 4px 12px rgba(49, 130, 206, 0.4);
                     }
                     
                     #rtl-panel {
@@ -200,7 +201,7 @@ win.webContents.on('dom-ready', () => {
                     
                     .rtl-panel-header {
                         padding: 20px;
-                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
                         color: white;
                         text-align: center;
                         font-weight: 600;
@@ -242,7 +243,7 @@ win.webContents.on('dom-ready', () => {
                     }
                     
                     .rtl-switch.active {
-                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
                     }
                     
                     .rtl-switch::after {
