@@ -23,7 +23,8 @@ async function isAlreadyPatched(extractDir) {
   }
   
   const content = await fs.readFile(utilsPath, 'utf-8');
-  return content.includes(PATCH_MARKER);
+  // Always return false to force re-patching with new version
+  return false;
 }
 
 /**
