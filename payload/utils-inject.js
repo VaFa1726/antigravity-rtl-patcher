@@ -97,13 +97,8 @@ win.webContents.on('dom-ready', () => {
                 }, 500);
                 
                 const CSS = \`
-                    /* Vazirmatn Font */
-                    @font-face {
-                        font-family: 'Vazirmatn';
-                        src: url('./Vazirmatn-Variable.woff2') format('woff2');
-                        font-weight: 100 900;
-                        font-display: swap;
-                    }
+                    /* Vazirmatn Font from CDN */
+                    @import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
                     
                     /* Apply Vazirmatn to all text when RTL is active */
                     body.rtl-active {
