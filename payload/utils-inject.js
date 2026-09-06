@@ -47,19 +47,65 @@ win.webContents.on('dom-ready', () => {
                         -webkit-font-smoothing: antialiased !important;
                     }
                     
-                    /* RTL ALL text content - but NOT layout */
-                    body.rtl-active p,
-                    body.rtl-active h1, body.rtl-active h2, body.rtl-active h3,
-                    body.rtl-active h4, body.rtl-active h5, body.rtl-active h6,
-                    body.rtl-active li, body.rtl-active span:not(.rtl-ui),
-                    body.rtl-active div:not(#rtl-panel):not(.rtl-ui):not([class*="button"]):not([class*="icon"]):not([class*="toolbar"]) > *:not(button):not(input):not(select) {
+                    /* Keep sidebars, navigation, and main layout LTR */
+                    body.rtl-active [class*="sidebar"],
+                    body.rtl-active [class*="nav"],
+                    body.rtl-active [class*="menu"],
+                    body.rtl-active [class*="toolbar"],
+                    body.rtl-active [class*="panel"],
+                    body.rtl-active [class*="list"],
+                    body.rtl-active aside,
+                    body.rtl-active nav {
+                        direction: ltr !important;
+                        text-align: left !important;
+                    }
+                    
+                    /* RTL only for message/chat content area */
+                    body.rtl-active [class*="message"] p,
+                    body.rtl-active [class*="message"] h1, 
+                    body.rtl-active [class*="message"] h2, 
+                    body.rtl-active [class*="message"] h3,
+                    body.rtl-active [class*="message"] h4, 
+                    body.rtl-active [class*="message"] h5, 
+                    body.rtl-active [class*="message"] h6,
+                    body.rtl-active [class*="message"] li,
+                    body.rtl-active [class*="chat"] p,
+                    body.rtl-active [class*="chat"] h1,
+                    body.rtl-active [class*="chat"] h2,
+                    body.rtl-active [class*="chat"] h3,
+                    body.rtl-active [class*="chat"] h4,
+                    body.rtl-active [class*="chat"] h5,
+                    body.rtl-active [class*="chat"] h6,
+                    body.rtl-active [class*="chat"] li,
+                    body.rtl-active [class*="content"] p,
+                    body.rtl-active [class*="content"] h1,
+                    body.rtl-active [class*="content"] h2,
+                    body.rtl-active [class*="content"] h3,
+                    body.rtl-active [class*="content"] h4,
+                    body.rtl-active [class*="content"] h5,
+                    body.rtl-active [class*="content"] h6,
+                    body.rtl-active [class*="content"] li,
+                    body.rtl-active main p,
+                    body.rtl-active main h1,
+                    body.rtl-active main h2,
+                    body.rtl-active main h3,
+                    body.rtl-active main h4,
+                    body.rtl-active main h5,
+                    body.rtl-active main h6,
+                    body.rtl-active main li {
                         direction: rtl !important;
                         text-align: right !important;
                     }
                     
                     /* Lists */
-                    body.rtl-active ul,
-                    body.rtl-active ol {
+                    body.rtl-active [class*="message"] ul,
+                    body.rtl-active [class*="message"] ol,
+                    body.rtl-active [class*="chat"] ul,
+                    body.rtl-active [class*="chat"] ol,
+                    body.rtl-active [class*="content"] ul,
+                    body.rtl-active [class*="content"] ol,
+                    body.rtl-active main ul,
+                    body.rtl-active main ol {
                         padding-left: 0 !important;
                         padding-right: 2rem !important;
                     }
@@ -78,9 +124,7 @@ win.webContents.on('dom-ready', () => {
                     body.rtl-active button,
                     body.rtl-active input,
                     body.rtl-active select,
-                    body.rtl-active [role="button"],
-                    body.rtl-active [class*="toolbar"],
-                    body.rtl-active [class*="menu"] {
+                    body.rtl-active [role="button"] {
                         direction: ltr !important;
                         text-align: left !important;
                     }
