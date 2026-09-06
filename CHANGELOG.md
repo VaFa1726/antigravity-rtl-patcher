@@ -2,120 +2,60 @@
 
 All notable changes to this project will be documented in this file.
 
-## [3.0.0] - 2024-09-06
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### 🎉 Major Rewrite - Utils.js Injection Approach
+## [1.0.0] - 2026-09-06
 
-This is a **breaking change** that completely rewrites the injection strategy for better control and features.
+### 🎉 First Stable Release
 
-### ✨ Added
+This is the first stable and production-ready release of Antigravity RTL Patcher.
 
-- **Advanced UI Panel** - Rich hover-activated widget with comprehensive customization
-- **Custom Font Support** - Set separate fonts for Persian/Arabic, English, and code
-- **Typography Controls** - Real-time line height (1.2-2.5) and font size (11-22px) adjustment
-- **Persistent Configuration** - Settings saved to `~/.antigravity-rtl-v3.json`
-- **Force RTL Mode** - Override auto-detection for consistent RTL layout
-- **Enhanced Keyboard Shortcuts** - `Alt + R` to toggle RTL
-- **@ Sign Fix** - Type `@` with `Shift+2` on Persian keyboard
-- **DevTools Enabled** - Automatically enable DevTools for debugging
-- **Colorful CLI Banner** - Beautiful gradient ASCII art banner
-- **Update Command** - `agy-rtl update` to check for new versions
+### ✨ Features
 
-### 🔧 Changed
+- **Smart RTL Detection**: Automatically detects and applies RTL to Persian/Arabic text
+- **RTL Support for All Content Types**:
+  - Messages and chat content
+  - Tables and data displays
+  - Code blocks with Persian comments
+  - Headings, paragraphs, and lists
+- **Preserved UI Layout**: Sidebar, navigation, and toolbars stay LTR
+- **Toggle Control**: Easy on/off switch with visual indicator
+- **Keyboard Shortcut**: `Alt + R` to quickly toggle RTL mode
+- **Persistent Settings**: Configuration saved to `~/.antigravity-rtl.json`
+- **System Font Stack**: Uses native fonts (Segoe UI, Tahoma, Arial) for optimal rendering
+- **Proper Character Joining**: Persian/Arabic characters connect correctly
 
-- **Injection Point**: Changed from `preload.js` to `dist/utils.js` for better lifecycle control
-- **Config Storage**: Moved from localStorage to filesystem (`~/.antigravity-rtl-v3.json`)
-- **Detection Algorithm**: Improved RTL text detection with smarter first-character analysis
-- **UI Architecture**: Complete redesign with Tailwind-inspired styling
-- **Dependencies**: Added `figlet`, `picocolors`, and `prompts` for better CLI experience
+### 🔧 Technical Details
 
-### 🗑️ Removed
+- Injects into Antigravity's `dist/utils.js` for reliable operation
+- CSS-based RTL implementation with selective targeting
+- Automatic backup before patching
+- Clean restore functionality
 
-- Old `preload-inject.js` payload (replaced with `utils-inject.js`)
-- localStorage-based configuration (replaced with file-based config)
-
-### 🐛 Fixed
-
-- Better handling of mixed RTL/LTR content
-- Improved code block preservation in RTL contexts
-- More reliable font loading mechanism
-- Enhanced list padding in RTL mode
-
-### 📚 Documentation
-
-- Completely rewritten README with v3.0 features
-- Added troubleshooting section
-- Added keyboard shortcuts reference
-- Added configuration file documentation
-
----
-
-## [2.3.4] - 2024-09-06
-
-### ✨ Added
-
-- Auto-update checker before patching
-- `update` command to manually check for updates
-- Update notification system
-
-### 📚 Documentation
-
-- Added update instructions to README
-- Emphasized `@latest` usage in documentation
-
----
-
-## [2.3.3] - 2024-09-06
-
-### 🐛 Fixed
-
-- Improved RTL text detection logic
-- Better layout rendering for mixed content
-
----
-
-## [2.3.1] - 2024-09-06
-
-### 🐛 Fixed
-
-- Bug fixes for layout issues
-- Added IDE detection to skip patching IDE versions
-
----
-
-## Earlier Versions
-
-See [GitHub Releases](https://github.com/VaFa1726/antigravity-rtl-patcher/releases) for details on versions before 2.3.1.
-
----
-
-## Migration Guide: v2.x → v3.0
-
-### What Changed
-
-1. **Configuration Location**: Your old settings in localStorage will not carry over. You'll need to reconfigure the RTL settings using the new UI panel.
-
-2. **UI Location**: The old status icon is replaced with a hover-activated globe icon in the bottom-right corner.
-
-3. **New Features**: Take advantage of custom fonts, typography controls, and Force RTL mode.
-
-### How to Upgrade
+### 📦 Installation
 
 ```bash
-# Restore old version
-npx antigravity-rtl-patcher restore
-
-# Install new version
 npx antigravity-rtl-patcher@latest patch
-
-# Restart Antigravity
 ```
 
-Your old backup will work fine. The new patch is completely independent.
+### 🎯 Compatibility
+
+- Supports all major Antigravity versions
+- Works on Linux, macOS, and Windows
+- Automatically detects installation paths
+
+### 🙏 Credits
+
+- Persian font rendering improvements
+- Community feedback and testing
+- Built with ❤️ for Persian/Arabic users
 
 ---
 
-[3.0.0]: https://github.com/VaFa1726/antigravity-rtl-patcher/releases/tag/v3.0.0
-[2.3.4]: https://github.com/VaFa1726/antigravity-rtl-patcher/releases/tag/v2.3.4
-[2.3.3]: https://github.com/VaFa1726/antigravity-rtl-patcher/releases/tag/v2.3.3
-[2.3.1]: https://github.com/VaFa1726/antigravity-rtl-patcher/releases/tag/v2.3.1
+## Development History
+
+Previous versions (2.x, 3.x) were experimental releases during active development.
+Version 1.0.0 represents the first stable, production-ready release.
+
+[1.0.0]: https://github.com/VaFa1726/antigravity-rtl-patcher/releases/tag/v1.0.0
