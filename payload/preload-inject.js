@@ -234,19 +234,46 @@ function _agyRtlRendererMain() {
     if (!RTL_REGEX.test(text)) return false;
     var m = text.match(RTL_CHAR_REGEX);
     if (!m) return false;
-    var alpha = text.replace(/[\s\d\W]/g, '').length;
-    return alpha > 0 && (m.length / alpha) >= MIN_RTL_RATIO;
+    // Calculate total word characters (removing spaces and punctuation)
+    var textLen = text.replace(/[\s\d\!\@\#\$\%\^\&\*\(\)\-\_\=\+\[\]\{\}\;\:\'\"\<\.\>\/\?\`\~\|\/\/،؛؟]/g, '').length;
+    return textLen > 0 && (m.length / textLen) >= MIN_RTL_RATIO;
   }
+  var INLINE_TAGS = ['SPAN', 'A', 'STRONG', 'B', 'EM', 'I', 'CODE', 'MARK', 'LABEL', 'BR', 'KBD', 'S', 'STRIKE', 'U', 'SUB', 'SUP'];
+  var TEXT_BLOCKS = ['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE', 'LI', 'TD', 'TH', 'BUTTON', 'TEXTAREA', 'INPUT'];
+
+  function isTextContainer(el) {
+    if (!el || el.nodeType !== 1) return false;
+    var tag = el.tagName.toUpperCase();
+    if (TEXT_BLOCKS.indexOf(tag) !== -1) return true;
+    
+    // For DIVs and others, they are considered text containers ONLY if they 
+    // don't contain any structural/block children (like SVG, IMG, DIV, P, UL).
+    // This prevents RTL-ing flex containers like sidebars.
+    var hasInlineOrText = false;
+    for (var i = 0; i < el.childNodes.length; i++) {
+      var child = el.childNodes[i];
+      if (child.nodeType === 3) {
+        if (child.nodeValue.trim().length > 0) hasInlineOrText = true;
+      } else if (child.nodeType === 1) {
+        if (INLINE_TAGS.indexOf(child.tagName.toUpperCase()) === -1) {
+          return false; // Found a block-level child, this is a structural container!
+        }
+        hasInlineOrText = true;
+      }
+    }
+    return hasInlineOrText;
+  }
+
   function applyRTL(el) {
     if (el.getAttribute(PROCESSED_ATTR)) return;
     // Skip the RTL panel/icon itself
     if (el.closest && (el.closest('#' + PANEL_ID) || el.closest('#' + STATUS_ICON_ID))) return;
-    var directText = Array.from(el.childNodes)
-        .filter(n => n.nodeType === Node.TEXT_NODE)
-        .map(n => n.textContent)
-        .join(' ');
-    if (directText.trim().length > 0 && isRTL(directText)) {
-      el.setAttribute(PROCESSED_ATTR, 'true');
+    
+    if (isTextContainer(el)) {
+      var text = el.textContent || '';
+      if (text.trim().length > 0 && isRTL(text)) {
+        el.setAttribute(PROCESSED_ATTR, 'true');
+      }
     }
   }
   function removeRTL(el) {
@@ -256,12 +283,8 @@ function _agyRtlRendererMain() {
     }
   }
 
-  // Wide selectors — catch all text-bearing elements
-  var SELECTORS = [
-    'p', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'blockquote', 'td', 'th', 'span', 'a', 'label',
-    'button',
-  ].join(',');
+  // Broad selectors — we use isTextContainer to filter them safely
+  var SELECTORS = 'div, p, li, h1, h2, h3, h4, h5, h6, blockquote, td, th, span, a, label, button';
 
   function scanElement(root) {
     if (!root || root.nodeType !== 1) return;
