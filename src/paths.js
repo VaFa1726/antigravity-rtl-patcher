@@ -78,6 +78,56 @@ function detectInstallation(basePath) {
 }
 
 /**
+ * Find utils.js inside an extracted ASAR directory.
+ * Searches common locations and falls back to recursive search.
+ */
+function findUtilsJs(extractDir) {
+  // Common locations
+  const candidates = [
+    path.join(extractDir, 'dist', 'utils.js'),
+    path.join(extractDir, 'out', 'utils.js'),
+    path.join(extractDir, 'app', 'utils.js'),
+    path.join(extractDir, 'src', 'utils.js'),
+  ];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  // Recursive fallback - find any utils.js (skip node_modules)
+  function searchDir(dir, depth) {
+    if (depth > 5) return null;
+    
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      
+      for (const entry of entries) {
+        if (entry.name === 'node_modules') continue;
+        
+        const fullPath = path.join(dir, entry.name);
+        
+        if (entry.isFile() && entry.name === 'utils.js') {
+          return fullPath;
+        }
+        
+        if (entry.isDirectory()) {
+          const found = searchDir(fullPath, depth + 1);
+          if (found) return found;
+        }
+      }
+    } catch (e) {
+      // Ignore permission errors
+    }
+    
+    return null;
+  }
+
+  return searchDir(extractDir, 0);
+}
+
+/**
  * Find all Antigravity installations on the system.
  */
 function findInstallations(customPath) {
@@ -103,4 +153,5 @@ function findInstallations(customPath) {
 module.exports = {
   findInstallations,
   detectInstallation,
+  findUtilsJs,
 };

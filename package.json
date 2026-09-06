@@ -1,7 +1,7 @@
 {
   "name": "antigravity-rtl-patcher",
-  "version": "2.3.4",
-  "description": "Smart RTL and Persian/Arabic typography patcher for Antigravity",
+  "version": "3.0.0",
+  "description": "Advanced RTL and Persian/Arabic typography patcher for Antigravity with customizable UI",
   "main": "src/patcher.js",
   "bin": {
     "antigravity-rtl-patcher": "./bin/cli.js",
@@ -23,7 +23,9 @@
     "electron",
     "asar",
     "right-to-left",
-    "bidirectional"
+    "bidirectional",
+    "ui-customization",
+    "font-control"
   ],
   "author": "VaFa1726",
   "license": "MIT",
@@ -42,7 +44,10 @@
     "@electron/asar": "^3.2.14",
     "chalk": "^4.1.2",
     "commander": "^11.1.0",
+    "figlet": "^1.7.0",
     "fs-extra": "^11.2.0",
-    "ora": "^5.4.1"
+    "ora": "^5.4.1",
+    "picocolors": "^1.0.0",
+    "prompts": "^2.4.2"
   }
 }
