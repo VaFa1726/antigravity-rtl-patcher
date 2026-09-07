@@ -335,7 +335,7 @@ win.webContents.on('dom-ready', () => {
                 trigger.id = 'rtl-trigger';
                 trigger.className = rtlEnabled ? 'active rtl-ui' : 'rtl-ui';
                 trigger.innerHTML = '⇄';
-                trigger.title = 'RTL Settings (Alt+R)';
+                trigger.title = 'RTL Settings (Ctrl+E)';
                 
                 const panel = document.createElement('div');
                 panel.id = 'rtl-panel';
@@ -395,7 +395,7 @@ win.webContents.on('dom-ready', () => {
                 });
                 
                 document.addEventListener('keydown', (e) => {
-                    if (e.altKey && e.code === 'KeyR') {
+                    if (e.ctrlKey && e.code === 'KeyE') {
                         e.preventDefault();
                         document.getElementById('rtl-toggle').click();
                     }

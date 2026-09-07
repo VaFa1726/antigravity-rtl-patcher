@@ -16,7 +16,7 @@ This **stable release** seamlessly adds intelligent Right-to-Left (RTL) support 
 
 - **🧠 True Smart RTL:** Using a highly optimized DOM `TreeWalker`, it detects Persian/Arabic text in real-time. The main application layout (sidebars, navbars, menus) remains flawlessly intact.
 - **💬 Intelligent Input Fields:** Your input box ("Ask a question...") remains LTR and perfectly aligned while empty. It instantly switches direction *only* when you type an RTL character.
-- **🎨 Native UI Widget:** Includes a sleek, floating settings panel (Alt+R) to toggle the RTL engine on and off on the fly.
+- **🎨 Native UI Widget:** Includes a sleek, floating settings panel (Ctrl+E) to toggle the RTL engine on and off on the fly.
 - **🛡️ Bulletproof Stability:** Comprehensively tested on Windows, macOS, and Linux. Automatically backs up your original `app.asar` before making any modifications.
 
 ---
@@ -71,7 +71,7 @@ sudo npx antigravity-rtl-patch patch
 ## ⌨️ Keyboard Shortcuts
 
 Once successfully patched, open Antigravity. You can quickly toggle the RTL mode using:
-- **`Alt + R`**: Toggles the Smart RTL engine on/off instantly.
+- **`Ctrl + E`**: Toggles the Smart RTL engine on/off instantly.
 
 ---
 
