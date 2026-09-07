@@ -24,7 +24,7 @@ function compareVersions(v1, v2) {
  */
 function fetchLatestVersion() {
   return new Promise((resolve, reject) => {
-    const url = 'https://registry.npmjs.org/antigravity-rtl-patcher/latest';
+    const url = 'https://registry.npmjs.org/antigravity-rtl-patch/latest';
     
     https.get(url, { timeout: 3000 }, (res) => {
       let data = '';
@@ -61,8 +61,8 @@ async function checkForUpdates(silent = false) {
         console.log(chalk.white(`   Current: ${chalk.red(currentVersion)} → Latest: ${chalk.green(latestVersion)}`));
         console.log('');
         console.log(chalk.cyan('   Run one of these commands to update:'));
-        console.log(chalk.gray('   • npx antigravity-rtl-patcher@latest patch'));
-        console.log(chalk.gray('   • npm install -g antigravity-rtl-patcher@latest'));
+        console.log(chalk.gray('   • npx antigravity-rtl-patch@latest patch'));
+        console.log(chalk.gray('   • npm install -g antigravity-rtl-patch@latest'));
         console.log('');
       }
       return true;
@@ -87,11 +87,11 @@ function showUpdateInstructions() {
   console.log('');
   console.log(chalk.white('To update to the latest version, run:'));
   console.log('');
-  console.log(chalk.green('  npx antigravity-rtl-patcher@latest patch'));
+  console.log(chalk.green('  npx antigravity-rtl-patch@latest patch'));
   console.log(chalk.gray('  (This will automatically download and use the latest version)\n'));
   console.log(chalk.white('Or install globally:'));
   console.log('');
-  console.log(chalk.green('  npm install -g antigravity-rtl-patcher@latest'));
+  console.log(chalk.green('  npm install -g antigravity-rtl-patch@latest'));
   console.log(chalk.gray('  (Then you can use: agy-rtl patch)\n'));
 }
 

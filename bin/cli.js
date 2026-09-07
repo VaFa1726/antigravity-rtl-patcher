@@ -82,10 +82,11 @@ program
   .command('patch')
   .description('Apply RTL patch to Antigravity')
   .option('-p, --path <path>', 'Custom path to Antigravity installation')
+  .option('-f, --force', 'Force re-patch even if already patched')
   .option('--skip-update-check', 'Skip checking for updates')
   .action(async (options) => {
     try {
-      await patch(options.path, options.skipUpdateCheck);
+      await patch(options.path, options.skipUpdateCheck, options.force);
     } catch (err) {
       console.error(chalk.red('\n✖ Patch failed:'), err.message);
       process.exit(1);

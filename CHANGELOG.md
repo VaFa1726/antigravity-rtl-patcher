@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7] - 2026-09-07
+
+### 🐛 Fixed
+- **List Numbers and Bullets Positioning**: Fixed ordered list numbers (`1.`, `2.`, `3.`) and bullets staying stranded on the left margin by recursively propagating RTL direction to all ancestor list containers (`<ol>`, `<ul>`).
+- **Inline Elements in Blocks**: Removed `SPAN` from `BLOCK_TAGS` so block containers (`<p>`, `<div>`, `<li>`) properly receive `direction: rtl` and `text-align: right`.
+- **Preserved Native Typography**: Removed forced `Courier New` font overrides on code blocks, fully preserving Antigravity's native font and editor styling.
+- **NPM Package Registry & Update Checker**: Fixed 404 registry endpoint and updated package references to `antigravity-rtl-patch`.
+- **macOS Path Detection**: Added support for standard macOS bundle directories (`Contents/Resources/app.asar`).
+- **Clean Re-patch Support**: Added `-f, --force` option and clean backup extraction to avoid nested payload injections.
+
 ## [1.0.0] - 2026-09-06
 
 ### 🎉 First Stable Release
@@ -21,9 +31,9 @@ This is the first stable and production-ready release of Antigravity RTL Patcher
   - Headings, paragraphs, and lists
 - **Preserved UI Layout**: Sidebar, navigation, and toolbars stay LTR
 - **Toggle Control**: Easy on/off switch with visual indicator
-- **Keyboard Shortcut**: `Alt + R` to quickly toggle RTL mode
+- **Keyboard Shortcut**: `Ctrl + E` to quickly toggle RTL mode
 - **Persistent Settings**: Configuration saved to `~/.antigravity-rtl.json`
-- **System Font Stack**: Uses native fonts (Segoe UI, Tahoma, Arial) for optimal rendering
+- **Native Typography**: Preserves Antigravity's native fonts and editor typography
 - **Proper Character Joining**: Persian/Arabic characters connect correctly
 
 ### 🔧 Technical Details
@@ -36,7 +46,7 @@ This is the first stable and production-ready release of Antigravity RTL Patcher
 ### 📦 Installation
 
 ```bash
-npx antigravity-rtl-patcher@latest patch
+npx antigravity-rtl-patch@latest patch
 ```
 
 ### 🎯 Compatibility

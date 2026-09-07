@@ -16,7 +16,7 @@ function checkPermissions(targetPath) {
       console.error(chalk.red.bold('\n⚠️  Permission Denied!'));
       console.error(chalk.white('Modifying system applications requires administrator privileges.'));
       console.error(chalk.white(`Please run with ${chalk.yellow('sudo')}:\n`));
-      console.error(chalk.cyan('  sudo npx antigravity-rtl-patcher patch\n'));
+      console.error(chalk.cyan('  sudo npx antigravity-rtl-patch patch\n'));
       process.exit(1);
     }
   }

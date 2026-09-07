@@ -1,4 +1,4 @@
-/* ANTIGRAVITY_RTL_PATCH_v3 */
+/* ANTIGRAVITY_RTL_PATCH_v1.0.7 */
 
 win.webContents.on('console-message', (event, ...args) => {
     let message = '';
@@ -45,7 +45,7 @@ win.webContents.on('dom-ready', () => {
                 // Block-level elements where we want to set direction
                 const BLOCK_TAGS = new Set([
                     'P','LI','H1','H2','H3','H4','H5','H6',
-                    'TD','TH','BLOCKQUOTE','DIV','SECTION','ARTICLE','SPAN'
+                    'TD','TH','BLOCKQUOTE','DIV','SECTION','ARTICLE'
                 ]);
                 
                 // Tags whose text should never be RTL
@@ -117,10 +117,20 @@ win.webContents.on('dom-ready', () => {
                             root.style.textAlign = '';
                             root.removeAttribute('data-rtl-forced');
                         }
+                        if (root.hasAttribute('data-rtl-list')) {
+                            root.style.direction = '';
+                            root.style.textAlign = '';
+                            root.removeAttribute('data-rtl-list');
+                        }
                         root.querySelectorAll && root.querySelectorAll('[data-rtl-forced]').forEach(el => {
                             el.style.direction = '';
                             el.style.textAlign = '';
                             el.removeAttribute('data-rtl-forced');
+                        });
+                        root.querySelectorAll && root.querySelectorAll('[data-rtl-list]').forEach(el => {
+                            el.style.direction = '';
+                            el.style.textAlign = '';
+                            el.removeAttribute('data-rtl-list');
                         });
                     }
                     
@@ -152,6 +162,28 @@ win.webContents.on('dom-ready', () => {
                         block.setAttribute('data-rtl-forced', '1');
                         block.style.direction = 'rtl';
                         block.style.textAlign = 'right';
+
+                        // If block is inside a list (LI) or is an LI itself, ensure all ancestor lists (UL/OL) are set to RTL
+                        let liNode = block.tagName === 'LI' ? block : (block.closest ? block.closest('li') : null);
+                        while (liNode && !isInsideLTRArea(liNode)) {
+                            if (!liNode.hasAttribute('data-rtl-forced')) {
+                                liNode.setAttribute('data-rtl-forced', '1');
+                                liNode.style.direction = 'rtl';
+                                liNode.style.textAlign = 'right';
+                            }
+                            const listParent = liNode.closest ? liNode.closest('ul, ol') : liNode.parentElement;
+                            if (listParent && !isInsideLTRArea(listParent)) {
+                                if (!listParent.hasAttribute('data-rtl-list')) {
+                                    listParent.setAttribute('data-rtl-list', '1');
+                                    listParent.style.direction = 'rtl';
+                                    listParent.style.textAlign = 'right';
+                                }
+                                // Move up to check if this list is nested inside another outer LI
+                                liNode = listParent.parentElement ? (listParent.parentElement.closest ? listParent.parentElement.closest('li') : null) : null;
+                            } else {
+                                break;
+                            }
+                        }
                     }
                 }
                 
@@ -161,24 +193,43 @@ win.webContents.on('dom-ready', () => {
                         el.style.textAlign = '';
                         el.removeAttribute('data-rtl-forced');
                     });
+                    document.querySelectorAll('[data-rtl-list]').forEach(el => {
+                        el.style.direction = '';
+                        el.style.textAlign = '';
+                        el.removeAttribute('data-rtl-list');
+                    });
                 }
                 
                 // ─── CSS: only what JS can't handle ───────────────────────
                 const CSS = \`
-                    /* Code blocks: always LTR */
+                    /* Code blocks: always LTR (preserve native editor font) */
                     body.rtl-active pre,
                     body.rtl-active code,
                     body.rtl-active pre *,
                     body.rtl-active code * {
                         direction: ltr !important;
                         text-align: left !important;
-                        font-family: 'Courier New', Consolas, Monaco, monospace !important;
                     }
                     /* NOTE: textarea/input RTL is handled by JS (setupInputRTL)
                        so placeholder stays LTR when field is empty */
-                    /* Lists padding */
-                    body.rtl-active [data-rtl-forced] ul,
-                    body.rtl-active [data-rtl-forced] ol {
+                    /* Lists: align bullets and numbers properly */
+                    body.rtl-active ul[data-rtl-list],
+                    body.rtl-active ol[data-rtl-list] {
+                        direction: rtl !important;
+                        text-align: right !important;
+                        padding-left: 0 !important;
+                        padding-right: 2rem !important;
+                        list-style-position: outside !important;
+                    }
+                    body.rtl-active li[data-rtl-forced] {
+                        direction: rtl !important;
+                        text-align: right !important;
+                    }
+                    /* Nested lists indentation */
+                    body.rtl-active ul[data-rtl-list] ul,
+                    body.rtl-active ul[data-rtl-list] ol,
+                    body.rtl-active ol[data-rtl-list] ul,
+                    body.rtl-active ol[data-rtl-list] ol {
                         padding-left: 0 !important;
                         padding-right: 1.5rem !important;
                     }

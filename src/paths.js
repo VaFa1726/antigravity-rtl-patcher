@@ -46,7 +46,9 @@ function getSearchPaths() {
       ...common,
     ],
     darwin: [
+      '/Applications/Antigravity.app',
       '/Applications/Antigravity.app/Contents',
+      path.join(home, 'Applications', 'Antigravity.app'),
       path.join(home, 'Applications', 'Antigravity.app', 'Contents'),
       ...common,
     ],
@@ -63,16 +65,24 @@ function getSearchPaths() {
 
 /**
  * Detect an Antigravity installation at a given base path.
- * Looks for an ASAR package at resources/app.asar.
+ * Looks for an ASAR package at resources/app.asar (or macOS variants).
  */
 function detectInstallation(basePath) {
-  const asarPath = path.join(basePath, 'resources', 'app.asar');
-  if (fs.existsSync(asarPath)) {
-    return {
-      type: 'asar',
-      basePath,
-      asarPath,
-    };
+  const candidates = [
+    path.join(basePath, 'resources', 'app.asar'),
+    path.join(basePath, 'Resources', 'app.asar'),
+    path.join(basePath, 'Contents', 'Resources', 'app.asar'),
+    path.join(basePath, 'Contents', 'resources', 'app.asar'),
+  ];
+
+  for (const asarPath of candidates) {
+    if (fs.existsSync(asarPath)) {
+      return {
+        type: 'asar',
+        basePath,
+        asarPath,
+      };
+    }
   }
   return null;
 }

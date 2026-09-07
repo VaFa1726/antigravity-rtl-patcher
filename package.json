@@ -1,9 +1,10 @@
 {
   "name": "antigravity-rtl-patch",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Advanced RTL and Persian/Arabic typography patcher for Antigravity with customizable UI",
   "main": "src/patcher.js",
   "bin": {
+    "antigravity-rtl-patch": "./bin/cli.js",
     "antigravity-rtl-patcher": "./bin/cli.js",
     "agy-rtl": "./bin/cli.js"
   },
@@ -47,7 +48,6 @@
     "figlet": "^1.7.0",
     "fs-extra": "^11.2.0",
     "ora": "^5.4.1",
-    "picocolors": "^1.0.0",
     "prompts": "^2.4.2"
   }
 }
