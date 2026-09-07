@@ -160,13 +160,8 @@ win.webContents.on('dom-ready', () => {
                         text-align: left !important;
                         font-family: 'Courier New', Consolas, Monaco, monospace !important;
                     }
-                    /* Input / textarea: RTL when active */
-                    body.rtl-active textarea,
-                    body.rtl-active [contenteditable="true"],
-                    body.rtl-active [role="textbox"] {
-                        direction: rtl !important;
-                        text-align: right !important;
-                    }
+                    /* NOTE: textarea/input RTL is handled by JS (setupInputRTL)
+                       so placeholder stays LTR when field is empty */
                     /* Lists padding */
                     body.rtl-active [data-rtl-forced] ul,
                     body.rtl-active [data-rtl-forced] ol {
@@ -268,7 +263,13 @@ win.webContents.on('dom-ready', () => {
                         if (!rtlEnabled) return;
                         mutations.forEach(m => {
                             m.addedNodes.forEach(n => {
-                                if (n.nodeType === 1) applyRTLToSubtree(n);
+                                if (n.nodeType === 1) {
+                                    applyRTLToSubtree(n);
+                                    if (n.matches && n.matches('textarea, [contenteditable="true"], [role="textbox"]')) {
+                                        setupInputRTL(n);
+                                    }
+                                    n.querySelectorAll && n.querySelectorAll('textarea, [contenteditable="true"], [role="textbox"]').forEach(setupInputRTL);
+                                }
                             });
                             // Re-check parent when text content changes
                             if (m.type === 'characterData' && m.target.parentElement) {
@@ -286,6 +287,48 @@ win.webContents.on('dom-ready', () => {
                 }
                 
                 if (rtlEnabled) startObserver();
+                
+                // ─── Smart input RTL ──────────────────────────────────────
+                // Apply RTL to text inputs ONLY when user has typed RTL chars.
+                // When field is empty, direction is reset so placeholder stays LTR.
+                function updateInputDir(el) {
+                    const text = el.value !== undefined ? el.value : (el.innerText || '');
+                    if (!text.trim()) {
+                        // Empty — reset so placeholder shows correctly
+                        el.style.direction = '';
+                        el.style.textAlign = '';
+                    } else if (RTL_REGEX.test(text)) {
+                        el.style.direction = 'rtl';
+                        el.style.textAlign = 'right';
+                    } else {
+                        // LTR content — also reset
+                        el.style.direction = '';
+                        el.style.textAlign = '';
+                    }
+                }
+                
+                function setupInputRTL(el) {
+                    if (!el || el.dataset.rtlInputBound) return;
+                    el.dataset.rtlInputBound = '1';
+                    el.addEventListener('input', () => { if (rtlEnabled) updateInputDir(el); });
+                    el.addEventListener('keyup',  () => { if (rtlEnabled) updateInputDir(el); });
+                    if (rtlEnabled) updateInputDir(el);
+                }
+                
+                function setupAllInputs() {
+                    document.querySelectorAll(
+                        'textarea, [contenteditable="true"], [role="textbox"]'
+                    ).forEach(setupInputRTL);
+                }
+                
+                function teardownAllInputs() {
+                    document.querySelectorAll('[data-rtl-input-bound]').forEach(el => {
+                        el.style.direction = '';
+                        el.style.textAlign = '';
+                    });
+                }
+                
+                if (rtlEnabled) setupAllInputs();
                 
                 // ─── UI ───────────────────────────────────────────────────
                 const trigger = document.createElement('button');
@@ -339,11 +382,13 @@ win.webContents.on('dom-ready', () => {
                     if (rtlEnabled) {
                         document.body.classList.add('rtl-active');
                         applyRTLToSubtree(document.body);
+                        setupAllInputs();
                         startObserver();
                     } else {
                         document.body.classList.remove('rtl-active');
                         stopObserver();
                         removeRTLFromAll();
+                        teardownAllInputs();
                     }
                     
                     console.log('RTL_CONFIG_SAVE:' + JSON.stringify({ enabled: rtlEnabled }));
