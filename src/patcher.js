@@ -8,7 +8,7 @@ const { findInstallations, findUtilsJs } = require('./paths');
 const { checkPermissions, delay } = require('./utils');
 const { checkForUpdates } = require('./version-checker');
 
-const PATCH_MARKER = '/* ANTIGRAVITY_RTL_PATCH_v1 */';
+const PATCH_MARKER = '/* ANTIGRAVITY_RTL_PATCH_v3 */';
 const BACKUP_SUFFIX = '.agy-rtl-backup';
 const INJECTION_ANCHOR = 'void win.loadURL(url);';
 
@@ -23,8 +23,7 @@ async function isAlreadyPatched(extractDir) {
   }
   
   const content = await fs.readFile(utilsPath, 'utf-8');
-  // Always return false to force re-patching with new version
-  return false;
+  return content.includes(PATCH_MARKER);
 }
 
 /**
@@ -96,14 +95,6 @@ async function patchAsar(installation, spinner) {
 
     // 10. Write modified utils.js
     await fs.writeFile(utilsPath, utilsContent, 'utf-8');
-
-    // 11. Copy font file
-    const fontSource = path.join(__dirname, '..', 'payload', 'Vazirmatn-Variable.woff2');
-    const fontDest = path.join(path.dirname(utilsPath), 'Vazirmatn-Variable.woff2');
-    
-    if (fs.existsSync(fontSource)) {
-      await fs.copy(fontSource, fontDest);
-    }
 
     spinner.succeed('RTL engine injected successfully');
 

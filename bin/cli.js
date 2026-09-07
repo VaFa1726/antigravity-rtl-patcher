@@ -124,7 +124,7 @@ program
   .action(async () => {
     console.log(chalk.cyan('Checking for updates...\n'));
     const hasUpdate = await checkForUpdates(false);
-    if (!hasUpdate) {
+    if (hasUpdate) {
       showUpdateInstructions();
     }
   });
