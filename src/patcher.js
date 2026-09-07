@@ -4,7 +4,8 @@ const path = require('path');
 const os = require('os');
 const ora = require('ora');
 const chalk = require('chalk');
-const { findInstallations, findUtilsJs } = require('./paths');
+const prompts = require('prompts');
+const { findInstallations, findUtilsJs, detectInstallation } = require('./paths');
 const { checkPermissions, delay } = require('./utils');
 const { checkForUpdates } = require('./version-checker');
 
@@ -142,10 +143,29 @@ async function patch(customPath, skipUpdateCheck = false) {
   const installations = findInstallations(customPath);
 
   if (installations.length === 0) {
-    spinner.fail('Antigravity installation not found');
-    console.error(chalk.yellow('\nTry specifying the path manually:'));
-    console.error(chalk.cyan('  agy-rtl patch --path /path/to/Antigravity\n'));
-    throw new Error('Installation not found');
+    spinner.fail('Antigravity installation not found in common paths');
+    spinner.stop();
+
+    // Ask user to enter path manually
+    const response = await prompts({
+      type: 'text',
+      name: 'manualPath',
+      message: chalk.yellow('Enter the path to your Antigravity installation folder:'),
+      validate: (val) => {
+        if (!val || !val.trim()) return 'Path cannot be empty';
+        if (!fs.existsSync(val.trim())) return 'Path does not exist';
+        const info = detectInstallation(val.trim());
+        if (!info) return 'No app.asar found at that path (expected: <path>/resources/app.asar)';
+        return true;
+      }
+    });
+
+    if (!response.manualPath) {
+      throw new Error('No path provided — patch cancelled');
+    }
+
+    const info = detectInstallation(response.manualPath.trim());
+    installations.push(info);
   }
 
   spinner.succeed('Found ' + installations.length + ' installation(s)');
