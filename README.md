@@ -75,5 +75,3 @@ Once successfully patched, open Antigravity. You can quickly toggle the RTL mode
 
 ---
 
-## 📝 License
-This project is open-source and available under the [MIT License](LICENSE).
