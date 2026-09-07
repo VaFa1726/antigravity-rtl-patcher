@@ -40,6 +40,8 @@ async function getPatchStatus(extractDir) {
 async function patchAsar(installation, spinner, force = false) {
   const { asarPath } = installation;
   const backupPath = asarPath + BACKUP_SUFFIX;
+  const unpackedDir = asarPath + '.unpacked';
+  const backupUnpackedDir = backupPath + '.unpacked';
   const tmpDir = path.join(os.tmpdir(), 'agy-rtl-' + Date.now());
 
   try {
@@ -47,6 +49,10 @@ async function patchAsar(installation, spinner, force = false) {
     if (!fs.existsSync(backupPath)) {
       spinner.text = 'Creating backup...';
       await fs.copy(asarPath, backupPath);
+      // Also backup the .unpacked directory if it exists
+      if (fs.existsSync(unpackedDir)) {
+        await fs.copy(unpackedDir, backupUnpackedDir);
+      }
       spinner.succeed('Backup created');
     } else {
       spinner.info('Backup already exists, skipping');
@@ -141,10 +147,17 @@ async function patchAsar(installation, spinner, force = false) {
 async function restoreAsar(installation, spinner) {
   const { asarPath } = installation;
   const backupPath = asarPath + BACKUP_SUFFIX;
+  const unpackedDir = asarPath + '.unpacked';
+  const backupUnpackedDir = backupPath + '.unpacked';
 
   if (fs.existsSync(backupPath)) {
     spinner.start('Restoring from backup...');
     await fs.copy(backupPath, asarPath);
+    // Also restore the .unpacked directory if backup exists
+    if (fs.existsSync(backupUnpackedDir)) {
+      await fs.copy(backupUnpackedDir, unpackedDir);
+      await fs.remove(backupUnpackedDir);
+    }
     await fs.remove(backupPath);
     spinner.succeed('Original app.asar restored');
   } else {

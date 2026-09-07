@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.8] - 2026-09-07
+
+### 🐛 Fixed
+- **Critical: Force Re-patch Failure**: Fixed a critical bug where `--force` re-patching would fail with `ENOENT` errors. The backup system now correctly handles the `app.asar.unpacked/` directory alongside `app.asar`, which is required by Electron's asar module for native modules (e.g., `chrome-devtools-mcp`).
+- **Restore Integrity**: The `restore` command now also restores the `.unpacked` directory from backup, ensuring a complete and clean rollback.
+- **CLI Executable Permission**: Set correct executable permission (`755`) on `bin/cli.js` for reliable `npx` execution on Linux/macOS.
+
 ## [1.0.7] - 2026-09-07
 
 ### 🐛 Fixed
