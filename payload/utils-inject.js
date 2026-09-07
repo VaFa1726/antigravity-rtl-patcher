@@ -92,7 +92,11 @@ win.webContents.on('dom-ready', () => {
                     body.rtl-active main h4,
                     body.rtl-active main h5,
                     body.rtl-active main h6,
-                    body.rtl-active main li {
+                    body.rtl-active main li,
+                    body.rtl-active main div[class*="whitespace-pre-wrap"],
+                    body.rtl-active main div[class*="break-words"],
+                    body.rtl-active main div[class*="user-message"],
+                    body.rtl-active main [data-role="user"] * {
                         direction: rtl !important;
                         text-align: right !important;
                     }
@@ -105,13 +109,13 @@ win.webContents.on('dom-ready', () => {
                         text-align: right !important;
                     }
                     
-                    /* RTL for code blocks (bash, etc) */
+                    /* LTR for code blocks (bash, etc) */
                     body.rtl-active pre,
                     body.rtl-active code,
                     body.rtl-active pre *,
                     body.rtl-active code * {
-                        direction: rtl !important;
-                        text-align: right !important;
+                        direction: ltr !important;
+                        text-align: left !important;
                         font-family: 'Courier New', Consolas, Monaco, monospace !important;
                     }
                     
