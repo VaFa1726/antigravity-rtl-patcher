@@ -177,7 +177,7 @@ async function patch(customPath, skipUpdateCheck = false) {
   }
 
   console.log(chalk.green.bold('\n  ✨ Antigravity patched successfully!'));
-  console.log(chalk.cyan('  Restart Antigravity and press Alt + R to toggle RTL mode.\n'));
+  console.log(chalk.cyan('  Restart Antigravity and press Ctrl + E to toggle RTL mode.\n'));
 }
 
 /**
