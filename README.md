@@ -8,42 +8,43 @@
 
 <br>
 
-**Antigravity RTL Patch** is an advanced, smart typography and layout patcher designed specifically for the [Antigravity](https://github.com/vafa1726) application. It seamlessly adds intelligent Right-to-Left (RTL) support for Persian, Arabic, and Hebrew languages without breaking the application's core LTR user interface.
+**Antigravity RTL Patch** is an advanced, production-ready typography and layout patcher designed specifically for the [Antigravity](https://github.com/vafa1726) application. 
 
-## ✨ Features
+This **stable release** seamlessly adds intelligent Right-to-Left (RTL) support for Persian, Arabic, and Hebrew languages, completely transforming your chat experience without breaking the application's core LTR user interface.
 
-- **🧠 Smart RTL Detection:** Automatically detects Persian/Arabic text and applies RTL direction *only* where necessary. The main application layout (sidebars, navbars, menus) remains completely intact.
-- **💬 Intelligent Input Fields:** Text inputs (like "Ask a question...") remain LTR while empty. As soon as you type an RTL character, the field instantly switches direction.
-- **🎨 Native UI Widget:** Includes a sleek, non-intrusive floating settings panel (Alt+R) to toggle RTL on and off in real-time.
-- **⚡ Zero Overhead:** Highly optimized DOM `TreeWalker` ensures zero performance impact on large chats.
-- **🛡️ Safe & Reversible:** Automatically backs up your original `app.asar` before making any changes. You can restore to the factory state at any time.
+## ✨ Why Choose This Patcher?
+
+- **🧠 True Smart RTL:** Using a highly optimized DOM `TreeWalker`, it detects Persian/Arabic text in real-time. The main application layout (sidebars, navbars, menus) remains flawlessly intact.
+- **💬 Intelligent Input Fields:** Your input box ("Ask a question...") remains LTR and perfectly aligned while empty. It instantly switches direction *only* when you type an RTL character.
+- **🎨 Native UI Widget:** Includes a sleek, floating settings panel (Alt+R) to toggle the RTL engine on and off on the fly.
+- **🛡️ Bulletproof Stability:** Comprehensively tested on Windows, macOS, and Linux. Automatically backs up your original `app.asar` before making any modifications.
 
 ---
 
-## 🚀 Installation & Usage
+## 🚀 Installation Guide
 
-You do **not** need to download or clone this repository manually. The tool runs directly via `npx`, which comes pre-installed with [Node.js](https://nodejs.org/). 
+You do **not** need to download or clone this repository. The patcher runs directly via `npx`, which comes pre-installed with [Node.js](https://nodejs.org/). 
 
-> **Note:** If you don't have `npx`, please install Node.js first.
+> **⚠️ Prerequisites:** You must have Node.js installed on your system. If you do not have `npx` available in your terminal, please [download and install Node.js first](https://nodejs.org/).
 
-### 1. Apply the Patch (Install)
-Close the Antigravity application, open your terminal (or Command Prompt), and run:
+### 1. Apply the Patch (Windows, macOS, Linux)
+Close the Antigravity application entirely. Open your terminal (or Command Prompt / PowerShell) and run:
 
 ```bash
 npx antigravity-rtl-patch patch
 ```
 
-*The tool will automatically find your Antigravity installation, create a backup, and apply the patch. If it cannot find the app, it will prompt you to enter the path manually.*
+*The tool will automatically locate your Antigravity installation, create a safe backup, and inject the smart RTL engine. If the app cannot be found automatically, the patcher will politely ask you to enter the installation path manually.*
 
-### 2. Update to the Latest Version
-To ensure you have the latest stable release with all bug fixes, run the patch command with the `@latest` tag:
+### 2. Updating to the Latest Version
+We frequently release stability improvements. To ensure you have the absolute latest stable release, use the `@latest` flag:
 
 ```bash
 npx antigravity-rtl-patch@latest patch
 ```
 
-### 3. Restore Original (Uninstall)
-If you want to remove the patch and revert Antigravity to its original, unpatched state:
+### 3. Uninstall / Restore Original
+If you ever want to remove the patch and revert Antigravity to its original state, simply run:
 
 ```bash
 npx antigravity-rtl-patch restore
@@ -51,31 +52,26 @@ npx antigravity-rtl-patch restore
 
 ---
 
-## 🔐 A Note on Permissions (Linux / macOS)
+## 🔐 Permission Issues (Linux / macOS users)
 
-Depending on how and where you installed Antigravity, you might get a **Permission Denied (EACCES)** error when running the tool. This happens because system directories (like `/opt/` on Linux or `/Applications/` on Mac) require Administrator rights to modify files.
+Depending on your operating system, Antigravity might be installed in a system-protected directory (such as `/opt/` on Linux or `/Applications/` on macOS). 
 
-If you encounter a permission error, simply run the command with `sudo`:
+If you run the patch command and receive an **`EACCES: permission denied`** error, it simply means the terminal does not have the necessary rights to modify the Antigravity files.
+
+**How to fix it:**
+Simply run the command with administrator privileges using `sudo`:
 
 ```bash
 sudo npx antigravity-rtl-patch patch
 ```
-*(You will be prompted to enter your computer's password).*
-
----
-
-## 🛠️ Operating System Support
-
-- **🐧 Linux:** Fully supported (Searches `/opt`, `/usr/lib`, `~/.local/share`, AppImage extracted locations, etc.)
-- **🪟 Windows:** Fully supported (Searches `AppData\Local`, `Program Files`, etc.)
-- **🍎 macOS:** Fully supported (Searches `/Applications/` and `~/Applications/`)
+*(You will be prompted to enter your computer's password. This grants the script the one-time permission needed to modify the system files).*
 
 ---
 
 ## ⌨️ Keyboard Shortcuts
 
-Once patched, open Antigravity. You can quickly toggle the RTL mode using:
-- **`Alt + R`**: Toggles the Smart RTL engine on/off globally.
+Once successfully patched, open Antigravity. You can quickly toggle the RTL mode using:
+- **`Alt + R`**: Toggles the Smart RTL engine on/off instantly.
 
 ---
 
