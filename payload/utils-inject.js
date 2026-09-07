@@ -110,6 +110,20 @@ win.webContents.on('dom-ready', () => {
                 // Walk all text nodes under root, find those with RTL chars,
                 // and mark their nearest block container as RTL
                 function applyRTLToSubtree(root) {
+                    // Reset existing forced RTL in this subtree before re-evaluating
+                    if (root.nodeType === 1) {
+                        if (root.hasAttribute('data-rtl-forced')) {
+                            root.style.direction = '';
+                            root.style.textAlign = '';
+                            root.removeAttribute('data-rtl-forced');
+                        }
+                        root.querySelectorAll && root.querySelectorAll('[data-rtl-forced]').forEach(el => {
+                            el.style.direction = '';
+                            el.style.textAlign = '';
+                            el.removeAttribute('data-rtl-forced');
+                        });
+                    }
+                    
                     const walker = document.createTreeWalker(
                         root,
                         NodeFilter.SHOW_TEXT,
@@ -262,15 +276,19 @@ win.webContents.on('dom-ready', () => {
                     mutObserver = new MutationObserver((mutations) => {
                         if (!rtlEnabled) return;
                         mutations.forEach(m => {
-                            m.addedNodes.forEach(n => {
-                                if (n.nodeType === 1) {
-                                    applyRTLToSubtree(n);
-                                    if (n.matches && n.matches('textarea, [contenteditable="true"], [role="textbox"]')) {
-                                        setupInputRTL(n);
+                            if (m.type === 'childList') {
+                                m.addedNodes.forEach(n => {
+                                    if (n.nodeType === 1) {
+                                        applyRTLToSubtree(n);
+                                        if (n.matches && n.matches('textarea, [contenteditable="true"], [role="textbox"]')) {
+                                            setupInputRTL(n);
+                                        }
+                                        n.querySelectorAll && n.querySelectorAll('textarea, [contenteditable="true"], [role="textbox"]').forEach(setupInputRTL);
+                                    } else if (n.nodeType === 3 && n.parentElement) {
+                                        applyRTLToSubtree(n.parentElement);
                                     }
-                                    n.querySelectorAll && n.querySelectorAll('textarea, [contenteditable="true"], [role="textbox"]').forEach(setupInputRTL);
-                                }
-                            });
+                                });
+                            }
                             // Re-check parent when text content changes
                             if (m.type === 'characterData' && m.target.parentElement) {
                                 applyRTLToSubtree(m.target.parentElement);
