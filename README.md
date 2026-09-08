@@ -64,6 +64,17 @@ If you ever want to remove the patch and revert Antigravity to its original stat
 npx antigravity-rtl-patch restore
 ```
 
+### 5. Custom Installation Path
+If your Antigravity is installed in a non-standard location (e.g., Snap packages, portable installs), you can specify the path manually:
+
+```bash
+npx antigravity-rtl-patch patch --path /path/to/antigravity
+npx antigravity-rtl-patch restore --path /path/to/antigravity
+npx antigravity-rtl-patch status --path /path/to/antigravity
+```
+
+> **💡 Tip:** You can point `--path` to the installation folder, the `resources` folder, or even the `app.asar` file directly. The patcher will figure it out automatically. If the path is not provided and auto-detection fails, the patcher will prompt you to enter it interactively.
+
 ---
 
 ## 🔐 Permission Issues (Linux / macOS users)

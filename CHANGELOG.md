@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.9] - 2026-09-08
+
+### 🔧 Enhanced
+- **Expanded Path Detection Coverage**: Added comprehensive support for various installation naming conventions:
+  - Lowercase variants: `antigravity`, `antigravity-x64`
+  - Architecture-specific: `antigravity-linux-x64`, `antigravity-linux-arm64`
+  - macOS: Support for both `.app` bundle variants in Downloads/Desktop folders
+- **Linux System Paths**: Added `/usr/lib64`, `/usr/local/lib`, `/usr/local/share`, `~/Applications`, and `~/apps` to search paths
+- **Windows 32-bit Support**: Added `ProgramFiles(x86)` detection for 32-bit installations
+- **Direct File Path Support**: Fixed bug where passing direct `app.asar` file path to `--path` argument would fail. Now handles folder, resources folder, or direct file path seamlessly.
+- **Snap Package Support**: Added Snap installation paths (`/snap/antigravity/current`, `~/snap/antigravity/current`) with recursive `app.asar` search (max depth 3) for non-standard layouts.
+
+### 🐛 Fixed
+- **Stale Backup Detection**: Fixed a critical bug where updating Antigravity after patching would cause the patcher to re-apply an outdated backup. Now detects stale backups automatically and refreshes them.
+- **Restore Manual Path**: `restore` command now prompts for manual path input when auto-detection fails, matching the `patch` command's UX.
+- **Status Manual Path**: `status` command now prompts for manual path input when auto-detection fails.
+
+### 📝 Notes
+- All variants of case-sensitive naming in Linux are now properly detected
+- Enhanced compatibility with package managers and portable installations
+- Improved user experience when manually specifying installation paths
+
 ## [1.0.8] - 2026-09-07
 
 ### 🐛 Fixed

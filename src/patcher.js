@@ -45,7 +45,31 @@ async function patchAsar(installation, spinner, force = false) {
   const tmpDir = path.join(os.tmpdir(), 'agy-rtl-' + Date.now());
 
   try {
-    // 1. Backup original before any modification
+    // 1. Detect and handle stale backups
+    // If Antigravity was updated after patching, the old backup is outdated
+    if (fs.existsSync(backupPath)) {
+      const tmpCheck = path.join(os.tmpdir(), 'agy-rtl-check-' + Date.now());
+      try {
+        asar.extractAll(asarPath, tmpCheck);
+        const currentPatchState = await getPatchStatus(tmpCheck);
+        if (!currentPatchState.patched) {
+          // Current asar is clean (Antigravity was updated) but old backup still exists
+          spinner.warn('Detected Antigravity update — refreshing stale backup...');
+          await fs.remove(backupPath);
+          if (fs.existsSync(backupUnpackedDir)) {
+            await fs.remove(backupUnpackedDir);
+          }
+        }
+      } catch (e) {
+        // If check fails, proceed with existing backup
+      } finally {
+        if (fs.existsSync(tmpCheck)) {
+          await fs.remove(tmpCheck);
+        }
+      }
+    }
+
+    // 2. Backup original before any modification
     if (!fs.existsSync(backupPath)) {
       spinner.text = 'Creating backup...';
       await fs.copy(asarPath, backupPath);
@@ -220,11 +244,34 @@ async function patch(customPath, skipUpdateCheck = false, force = false) {
  */
 async function restore(customPath) {
   const spinner = ora('Searching for Antigravity...').start();
-  const installations = findInstallations(customPath);
+  let installations = findInstallations(customPath);
 
   if (installations.length === 0) {
     spinner.fail('Antigravity installation not found');
-    throw new Error('Installation not found');
+    spinner.stop();
+
+    // Ask user to enter path manually
+    const response = await prompts({
+      type: 'text',
+      name: 'manualPath',
+      message: chalk.yellow('Enter the path to your Antigravity installation folder:'),
+      validate: (val) => {
+        if (!val || !val.trim()) return 'Path cannot be empty';
+        if (!fs.existsSync(val.trim())) return 'Path does not exist';
+        const info = detectInstallation(val.trim());
+        if (!info) return 'No app.asar found at that path';
+        const backupExists = fs.existsSync(info.asarPath + BACKUP_SUFFIX);
+        if (!backupExists) return 'No backup found at that path — was it patched before?';
+        return true;
+      }
+    });
+
+    if (!response.manualPath) {
+      throw new Error('No path provided — restore cancelled');
+    }
+
+    const info = detectInstallation(response.manualPath.trim());
+    installations.push(info);
   }
 
   spinner.succeed('Found ' + installations.length + ' installation(s)');
@@ -244,11 +291,33 @@ async function restore(customPath) {
  */
 async function status(customPath) {
   const spinner = ora('Searching for Antigravity...').start();
-  const installations = findInstallations(customPath);
+  let installations = findInstallations(customPath);
 
   if (installations.length === 0) {
     spinner.fail('Antigravity installation not found');
-    return;
+    spinner.stop();
+
+    // Ask user to enter path manually
+    const response = await prompts({
+      type: 'text',
+      name: 'manualPath',
+      message: chalk.yellow('Enter the path to your Antigravity installation folder:'),
+      validate: (val) => {
+        if (!val || !val.trim()) return 'Path cannot be empty';
+        if (!fs.existsSync(val.trim())) return 'Path does not exist';
+        const info = detectInstallation(val.trim());
+        if (!info) return 'No app.asar found at that path';
+        return true;
+      }
+    });
+
+    if (!response.manualPath) {
+      console.log(chalk.gray('\n  No path provided — status check cancelled.\n'));
+      return;
+    }
+
+    const info = detectInstallation(response.manualPath.trim());
+    installations.push(info);
   }
 
   spinner.succeed('Found ' + installations.length + ' installation(s)');
